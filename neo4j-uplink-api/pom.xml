@@ -27,6 +27,7 @@
             <type>jar</type>
         </dependency>
     </dependencies>
+    
     <build>
         <plugins>
             <plugin>
@@ -77,7 +78,7 @@
                             <goal>perform</goal>
                         </goals>
                         <configuration>
-                            <pomFileName>neo4j-uplink-ejb/pom.xml</pomFileName>
+                            <pomFileName>neo4j-uplink-api/pom.xml</pomFileName>
                         </configuration>
                     </execution>
                 </executions>
