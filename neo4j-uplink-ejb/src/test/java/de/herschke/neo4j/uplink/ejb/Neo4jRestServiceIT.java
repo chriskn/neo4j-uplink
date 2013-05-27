@@ -1,6 +1,7 @@
 package de.herschke.neo4j.uplink.ejb;
 
 import de.herschke.neo4j.uplink.api.CypherResult;
+import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.api.Relationship;
 import java.io.File;
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith;
 public class Neo4jRestServiceIT {
 
     @EJB
-    Neo4jRestService qe;
+    Neo4jUplink qe;
 
     @Deployment(order = 2, name = "test-candidate")
     public static WebArchive createTestArchive() {
