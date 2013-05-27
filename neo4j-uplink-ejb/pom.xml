@@ -4,12 +4,12 @@
     <parent>
         <artifactId>neo4j-uplink</artifactId>
         <groupId>de.herschke</groupId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
 
     <groupId>de.herschke</groupId>
     <artifactId>neo4j-uplink-ejb</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>ejb</packaging>
 
     <name>Neo4j ReST Facade EJB Implementation</name>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>neo4j-uplink-api</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
@@ -235,8 +235,7 @@
                                         neo={name:'Keanu Reeves'},
                                         morpheus={name:'Laurence Fishburne'},
                                         trinity={name:'Carrie-Anne Moss'},
-                                        matrix1<-[:ACTS_IN {role : 'Neo'}]-neo, matrix2<-[:ACTS_IN {role : 'Neo'}]-neo,
-                                        matrix3<-[:ACTS_IN {role : 'Neo'}]-neo,
+                                        matrix1<-[:ACTS_IN {role : 'Neo'}]-neo, matrix2<-[:ACTS_IN {role : 'Neo'}]-neo, matrix3<-[:ACTS_IN {role : 'Neo'}]-neo,
                                         matrix1<-[:ACTS_IN {role : 'Morpheus'}]-morpheus,
                                         matrix2<-[:ACTS_IN {role : 'Morpheus'}]-morpheus,
                                         matrix3<-[:ACTS_IN {role : 'Morpheus'}]-morpheus,
