@@ -85,4 +85,10 @@
             </plugin>
         </plugins>
     </build>
+    
+    <scm>
+        <connection>scm:git:https://github.com/rherschke/neo4j-uplink.git</connection>
+        <developerConnection>scm:git:https://github.com/rherschke/neo4j-uplink.git</developerConnection>
+        <url>https://github.com/rherschke/neo4j-uplink</url>
+    </scm>
 </project>
