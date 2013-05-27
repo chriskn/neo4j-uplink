@@ -67,6 +67,30 @@ public class Neo4jRestServiceIT {
 
     @Test
     @OperateOnDeployment("test-candidate")
+    public void cypherErrorTest() throws Exception {
+        try {
+            executeCypherQuery("START n=node(*) WHERE n.name!=\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
+        } catch (Exception exception) {
+            assertThat(exception.getMessage()).startsWith("Cypher-Exception: SyntaxException");
+        }
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
+    public void propertiesMustExistTest() throws Exception {
+        CypherResult result = null;
+        result = executeCypherQuery("START n=node(*) WHERE n.name! =\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
+        assertThat(result).isNotNull();
+        assertThat(result.getRowCount()).isEqualTo(1);
+        assertThat(result.getValue(0, "n.name")).isNotNull().isEqualTo("Keanu Reeves");
+        result = executeCypherQuery("START n=node(*) WHERE HAS(n.name) AND n.name=\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
+        assertThat(result).isNotNull();
+        assertThat(result.getRowCount()).isEqualTo(1);
+        assertThat(result.getValue(0, "n.name")).isNotNull().isEqualTo("Keanu Reeves");
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
     public void nodeQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node:node_auto_index(name=\"Keanu Reeves\") return n", Collections.<String, Object>emptyMap());
         assertThat(result).isNotNull();

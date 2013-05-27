@@ -14,6 +14,7 @@ import javax.ejb.Remote;
 import javax.ejb.Singleton;
 import javax.ws.rs.core.MediaType;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -84,8 +85,7 @@ public class Neo4jRestService implements Neo4jUplink {
     }
 
     private Exception parseCypherError(ClientResponse response) throws IOException {
-        String message = "";
-        String exception = "";
-        return new Exception(String.format("Cypher-Exception: %s(%s)", exception, message));
+        JSONObject result = (JSONObject) JSONValue.parse(response.getEntity(String.class));
+        return new Exception(String.format("Cypher-Exception: %s(%s)", result.get("exception"), result.get("message")));
     }
 }
