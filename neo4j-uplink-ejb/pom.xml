@@ -13,6 +13,7 @@
     <packaging>ejb</packaging>
 
     <name>Neo4j ReST Facade EJB Implementation</name>
+    <url>https://github.com/rherschke/neo4j-uplink</url>
 
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>

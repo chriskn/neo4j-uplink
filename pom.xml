@@ -5,9 +5,12 @@
     <artifactId>neo4j-uplink</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+    
     <name>Neo4j ReST Facade</name>
+    <url>https://github.com/rherschke/neo4j-uplink</url>
+    
     <modules>
         <module>neo4j-uplink-api</module>
-    <module>neo4j-uplink-ejb</module>
-  </modules>
+        <module>neo4j-uplink-ejb</module>
+    </modules>
 </project>
