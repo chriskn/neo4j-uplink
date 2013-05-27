@@ -4,11 +4,13 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import de.herschke.neo4j.uplink.api.CypherResult;
+import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.ejb.responsehandling.CypherResponseHandler;
 import java.io.IOException;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.ejb.Remote;
 import javax.ejb.Singleton;
 import javax.ws.rs.core.MediaType;
 import org.json.simple.JSONObject;
@@ -20,7 +22,8 @@ import org.json.simple.parser.ParseException;
  * @author rhk
  */
 @Singleton
-public class Neo4jRestService {
+@Remote(Neo4jUplink.class)
+public class Neo4jRestService implements Neo4jUplink {
 
     @Resource(name = "neo4j-server-url")
     String neo4jURL;
@@ -36,11 +39,13 @@ public class Neo4jRestService {
         clientResource = client.resource(neo4jURL);
     }
 
+    @Override
     public boolean createNodeIndex(String name, Map<String, Object> config) throws Exception {
         ClientResponse response = clientResource.path("index/node").accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON).post(ClientResponse.class, buildIndexRequest(name, config));
         return response.getClientResponseStatus() == ClientResponse.Status.CREATED;
     }
 
+    @Override
     public CypherResult executeCypherQuery(String query, Map<String, Object> params) throws Exception {
         ClientResponse response = clientResource.path("cypher").accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON).post(ClientResponse.class, buildCypherRequest(query, params));
 
