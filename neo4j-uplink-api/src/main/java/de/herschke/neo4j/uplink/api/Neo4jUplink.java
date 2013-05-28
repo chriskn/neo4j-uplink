@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public interface Neo4jUplink {
 
-    boolean createNodeIndex(String name, Map<String, Object> config) throws Exception;
+    boolean createNodeIndex(String name, Map<String, Object> config) throws CypherException;
 
-    CypherResult executeCypherQuery(String query, Map<String, Object> params) throws Exception;
+    CypherResult executeCypherQuery(String query, Map<String, Object> params) throws CypherException;
 }

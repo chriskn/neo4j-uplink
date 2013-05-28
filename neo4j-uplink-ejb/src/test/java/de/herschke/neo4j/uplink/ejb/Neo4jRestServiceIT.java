@@ -1,5 +1,6 @@
 package de.herschke.neo4j.uplink.ejb;
 
+import de.herschke.neo4j.uplink.api.CypherException;
 import de.herschke.neo4j.uplink.api.CypherResult;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
@@ -67,10 +68,33 @@ public class Neo4jRestServiceIT {
 
     @Test
     @OperateOnDeployment("test-candidate")
+    public void noResultTest() throws Exception {
+        CypherResult result = executeCypherQuery("START n=node(*) WHERE HAS(n.xyz) RETURN n", Collections.<String, Object>emptyMap());
+        assertThat(result).isNotNull().isEmpty();
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
+    public void createRelationTest() throws Exception {
+        CypherResult result = executeCypherQuery(""
+                + "START"
+                + "  n=node(*), m=node(*) "
+                + "WHERE"
+                + "  HAS(n.name) AND n.name = \"Keanu Reeves\""
+                + "  AND HAS(m.title) AND m.title = \"The Matrix\""
+                + "CREATE"
+                + "  (n)<-[:SAVED_LIVE_OF]-(m) "
+                + "RETURN n.name AS `name`, m.title AS `title`", Collections.<String, Object>emptyMap());
+        assertThat(result).isNotEmpty();
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
     public void cypherErrorTest() throws Exception {
         try {
             executeCypherQuery("START n=node(*) WHERE n.name!=\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
         } catch (Exception exception) {
+            assertThat(exception).isInstanceOf(CypherException.class);
             assertThat(exception.getMessage()).startsWith("Cypher-Exception: SyntaxException");
         }
     }

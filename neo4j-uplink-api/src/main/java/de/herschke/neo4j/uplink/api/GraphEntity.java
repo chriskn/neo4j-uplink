@@ -1,5 +1,6 @@
 package de.herschke.neo4j.uplink.api;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
@@ -9,7 +10,7 @@ import org.json.simple.JSONObject;
  *
  * @author rhk
  */
-public abstract class GraphEntity {
+public abstract class GraphEntity implements Serializable {
 
     protected static final Pattern selfUrlPattern = Pattern.compile("http://.+/db/data/(node|relationship)/(\\d+)");
     private final int id;

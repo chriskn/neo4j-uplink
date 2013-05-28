@@ -1,5 +1,6 @@
 package de.herschke.neo4j.uplink.api;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +9,7 @@ import java.util.Map;
  *
  * @author rhk
  */
-public interface CypherResult extends Iterable<Map<String, Object>> {
+public interface CypherResult extends Iterable<Map<String, Object>>, Serializable {
 
     /**
      * @return the count of columns in the result
