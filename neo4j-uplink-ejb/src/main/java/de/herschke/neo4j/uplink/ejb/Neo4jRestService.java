@@ -85,9 +85,12 @@ public class Neo4jRestService implements Neo4jUplink {
         cypherRequest.put("query", query);
         Map<String, Object> _params = new HashMap<>();
         for (Entry<String, Object> entry : params.entrySet()) {
-            _params.put(entry.getKey(), toJSONObject(entry.getValue()));
+            toJSONObject(_params, entry.getKey(), entry.getValue());
         }
         cypherRequest.put("params", _params);
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(cypherRequest.toJSONString());
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         return cypherRequest.toJSONString();
     }
 
@@ -107,21 +110,23 @@ public class Neo4jRestService implements Neo4jUplink {
         }
     }
 
-    private Object toJSONObject(Object value) throws CypherException {
+    private void toJSONObject(Map<String, Object> params, String prefix, Object value) throws CypherException {
         if (value == null || value instanceof String || value instanceof Double || value instanceof Float || value instanceof Number || value instanceof Boolean || value instanceof JSONStreamAware || value instanceof JSONAware || value instanceof Map || value instanceof List) {
-            return value;
+            params.put(prefix, value);
         } else if (value instanceof Class) {
-            return value.getClass().getName();
+            params.put(prefix, ((Class) value).getSimpleName());
         } else {
             try {
                 JSONObject object = new JSONObject();
                 for (Method method : value.getClass().getMethods()) {
                     if (!"getClass".equals(method.getName()) && (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != void.class) {
                         String name = method.getName().startsWith("get") ? (method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4)) : (method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3));
-                        object.put(name, toJSONObject(method.invoke(value)));
+                        final Object newValue = method.invoke(value);
+                        toJSONObject(params, prefix + "." + name, newValue);
+                        object.put(name, newValue);
                     }
                 }
-                return object;
+                params.put(prefix, object);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new CypherException(String.format("cannot build cypher-query, due to: %s(%s)", ex.getClass().getSimpleName(), ex.getMessage()), ex);
             }

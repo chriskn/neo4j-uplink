@@ -28,6 +28,33 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class Neo4jRestServiceIT {
 
+    public static class Movie {
+
+        private String title;
+        private String year;
+
+        public Movie(String title, String year) {
+            this.title = title;
+            this.year = year;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getYear() {
+            return year;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public void setYear(String year) {
+            this.year = year;
+        }
+    }
+
     @EJB
     Neo4jUplink qe;
 
@@ -125,6 +152,28 @@ public class Neo4jRestServiceIT {
         Node node = (Node) cell;
 
         assertThat(node.getPropertyValue("name")).isInstanceOf(String.class).isEqualTo("Keanu Reeves");
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
+    public void queryWithObjectParameterTest() throws Exception {
+        Movie newMovie = new Movie("Star Trek - Into Darkness", "2013-05-09");
+        CypherResult result = executeCypherQuery("create n={newMovie} return n", Collections.<String, Object>singletonMap("newMovie", newMovie));
+        assertThat(result).isNotNull();
+        assertThat(result.getRowCount()).isEqualTo(1);
+        Object cell = result.getValue(0, "n");
+
+        assertThat(cell).isNotNull().isInstanceOf(Node.class);
+        Node node = (Node) cell;
+
+        assertThat(node.getPropertyValue("title")).isInstanceOf(String.class).isEqualTo(newMovie.getTitle());
+        assertThat(node.getPropertyValue("year")).isInstanceOf(String.class).isEqualTo(newMovie.getYear());
+
+        newMovie.setYear("2013-09-05");
+        result = executeCypherQuery("start n=node(" + node.getId() + ") set n.year = {`newMovie.year`} return n.year", Collections.<String, Object>singletonMap("newMovie", newMovie));
+        assertThat(result).isNotNull();
+        assertThat(result.getRowCount()).isEqualTo(1);
+        assertThat(result.getValue(0, "n.year")).isInstanceOf(String.class).isEqualTo(newMovie.getYear());
     }
 
     @Test
