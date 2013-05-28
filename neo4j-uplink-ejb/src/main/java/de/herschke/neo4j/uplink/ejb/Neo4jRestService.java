@@ -7,13 +7,23 @@ import de.herschke.neo4j.uplink.api.CypherException;
 import de.herschke.neo4j.uplink.api.CypherResult;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.ejb.responsehandling.CypherResponseHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ws.rs.core.MediaType;
+import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -52,14 +62,14 @@ public class Neo4jRestService implements Neo4jUplink {
 
         if (response.getClientResponseStatus().equals(ClientResponse.Status.OK)) {
             try {
-                return parseCypherResponse(response.getEntity(String.class));
-            } catch (ParseException ex) {
-                throw new CypherException("an unparseable response was retrieved: " + ex.getMessage());
+                return parseCypherResponse(response.getEntityInputStream());
+            } catch (IOException | ParseException ex) {
+                throw new CypherException("an unparseable response was retrieved: " + ex.getMessage(), ex);
             }
         } else if (response.getClientResponseStatus().equals(ClientResponse.Status.BAD_REQUEST)) {
             throw parseCypherError(response);
         } else {
-            throw new CypherException(String.format("call to Neo4j Server result in response with status: %s reason: %s", response.getClientResponseStatus(), response.getClientResponseStatus().getReasonPhrase()));
+            throw new CypherException(String.format("call to Neo4j Server result in response with status: %s reason: %s%n%s%n", response.getClientResponseStatus(), response.getClientResponseStatus().getReasonPhrase(), response));
         }
     }
 
@@ -70,19 +80,21 @@ public class Neo4jRestService implements Neo4jUplink {
         return indexRequest.toJSONString();
     }
 
-    private String buildCypherRequest(String query, Map<String, Object> params) {
+    private String buildCypherRequest(String query, Map<String, Object> params) throws CypherException {
         JSONObject cypherRequest = new JSONObject();
         cypherRequest.put("query", query);
-        cypherRequest.put("params", params);
+        Map<String, Object> _params = new HashMap<>();
+        for (Entry<String, Object> entry : params.entrySet()) {
+            _params.put(entry.getKey(), toJSONObject(entry.getValue()));
+        }
+        cypherRequest.put("params", _params);
         return cypherRequest.toJSONString();
     }
 
-    private CypherResult parseCypherResponse(String eis) throws ParseException {
+    private CypherResult parseCypherResponse(InputStream eis) throws ParseException, IOException {
         final CypherResponseHandler handler = new CypherResponseHandler();
         JSONParser parser = new JSONParser();
-        System.out.println(eis);
-        //parser.parse(new InputStreamReader(eis, "UTF-8"), handler);
-        parser.parse(eis, handler);
+        parser.parse(new InputStreamReader(eis, "UTF-8"), handler);
         return handler.getResult();
     }
 
@@ -92,6 +104,27 @@ public class Neo4jRestService implements Neo4jUplink {
             return new CypherException(String.format("Cypher-Exception: %s(%s)", result.get("exception"), result.get("message")));
         } else {
             return new CypherException("caught a Cypher-Exception without an exception entity");
+        }
+    }
+
+    private Object toJSONObject(Object value) throws CypherException {
+        if (value == null || value instanceof String || value instanceof Double || value instanceof Float || value instanceof Number || value instanceof Boolean || value instanceof JSONStreamAware || value instanceof JSONAware || value instanceof Map || value instanceof List) {
+            return value;
+        } else if (value instanceof Class) {
+            return value.getClass().getName();
+        } else {
+            try {
+                JSONObject object = new JSONObject();
+                for (Method method : value.getClass().getMethods()) {
+                    if (!"getClass".equals(method.getName()) && (method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != void.class) {
+                        String name = method.getName().startsWith("get") ? (method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4)) : (method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3));
+                        object.put(name, toJSONObject(method.invoke(value)));
+                    }
+                }
+                return object;
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                throw new CypherException(String.format("cannot build cypher-query, due to: %s(%s)", ex.getClass().getSimpleName(), ex.getMessage()), ex);
+            }
         }
     }
 }

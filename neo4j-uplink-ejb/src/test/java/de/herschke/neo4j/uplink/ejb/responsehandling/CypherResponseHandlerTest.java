@@ -20,6 +20,16 @@ import org.junit.Test;
 public class CypherResponseHandlerTest {
 
     @Test
+    public void testEmptyResponse() throws Exception {
+        String testJson = "{\n"
+                + "  \"columns\" : [ ],\n"
+                + "  \"data\" : [ ]\n"
+                + "}\n";
+        CypherResult result = parseJson(testJson);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     public void testSinglePrimitiveColumn() throws Exception {
         String testJson = "{\n"
                 + "    \"columns\": [\"test\"],\n"
