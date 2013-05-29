@@ -158,7 +158,7 @@ public class Neo4jRestServiceIT {
     @OperateOnDeployment("test-candidate")
     public void queryWithObjectParameterTest() throws Exception {
         Movie newMovie = new Movie("Star Trek - Into Darkness", "2013-05-09");
-        CypherResult result = executeCypherQuery("create n={newMovie} return n", Collections.<String, Object>singletonMap("newMovie", newMovie));
+        CypherResult result = executeCypherQuery("create (n {newMovie}) return n", Collections.<String, Object>singletonMap("newMovie", newMovie));
         assertThat(result).isNotNull();
         assertThat(result.getRowCount()).isEqualTo(1);
         Object cell = result.getValue(0, "n");
