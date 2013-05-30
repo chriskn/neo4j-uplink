@@ -8,6 +8,7 @@ import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.ejb.calls.AddNodeLabelsRequest;
 import de.herschke.neo4j.uplink.ejb.calls.CreateNodeIndexRequest;
+import de.herschke.neo4j.uplink.ejb.calls.CreateSchemaIndexRequest;
 import de.herschke.neo4j.uplink.ejb.calls.ExecuteCypherRequest;
 import de.herschke.neo4j.uplink.ejb.calls.GetNodeLabelsRequest;
 import de.herschke.neo4j.uplink.ejb.calls.GetNodesWithLabelRequest;
@@ -48,6 +49,11 @@ public class Neo4jRestService implements Neo4jUplink {
     @Override
     public boolean createNodeIndex(String name, Map<String, Object> config) throws Neo4jServerException {
         return executeServerCall(new CreateNodeIndexRequest(name, config));
+    }
+
+    @Override
+    public boolean createSchemaIndex(String name, String... propertyKeys) throws Neo4jServerException {
+        return executeServerCall(new CreateSchemaIndexRequest(name, propertyKeys));
     }
 
     @Override

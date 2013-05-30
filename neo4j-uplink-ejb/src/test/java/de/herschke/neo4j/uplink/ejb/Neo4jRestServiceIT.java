@@ -289,7 +289,7 @@ public class Neo4jRestServiceIT {
         result = executeCypherQuery("START n=node(*) WHERE n:actor RETURN n");
         assertThat(result.getRowCount()).isEqualTo(nodes.length);
 
-        result = executeCypherQuery("START n=node(*) WHERE n:matrix_actor:favorite_actor:actor RETURN n");
+        result = executeCypherQuery("MATCH n:matrix_actor:favorite_actor:actor RETURN n");
         assertThat(result.getRowCount()).isEqualTo(1);
         assertThat(result.getValue(0, "n")).isInstanceOf(Node.class);
         assertThat(((Node) result.getValue(0, "n")).getId()).isEqualTo(id);

@@ -20,6 +20,16 @@ public interface Neo4jUplink {
     boolean createNodeIndex(String name, Map<String, Object> config) throws Neo4jServerException;
 
     /**
+     * creates a new schema index with the given propertyKeys.
+     *
+     * @param name the schema index name
+     * @param propertyKeys an array of property names
+     * @return true, if the index was created
+     * @throws Neo4jServerException
+     */
+    boolean createSchemaIndex(String name, String... propertyKeys) throws Neo4jServerException;
+
+    /**
      * executes the given cypher query
      *
      * @param query the cypher query
