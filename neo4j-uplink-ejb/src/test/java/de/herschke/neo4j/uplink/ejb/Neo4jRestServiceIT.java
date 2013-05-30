@@ -1,7 +1,7 @@
 package de.herschke.neo4j.uplink.ejb;
 
-import de.herschke.neo4j.uplink.api.CypherException;
 import de.herschke.neo4j.uplink.api.CypherResult;
+import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.api.Relationship;
@@ -17,6 +17,7 @@ import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import static org.junit.Assert.fail;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,9 +55,8 @@ public class Neo4jRestServiceIT {
             this.year = year;
         }
     }
-
     @EJB
-    Neo4jUplink qe;
+    Neo4jUplink uplink;
 
     @Deployment(order = 2, name = "test-candidate")
     public static WebArchive createTestArchive() {
@@ -73,11 +73,22 @@ public class Neo4jRestServiceIT {
         return wa;
     }
 
+    private CypherResult executeCypherQuery(String query) throws Exception {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(query);
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        CypherResult result = uplink.executeCypherQuery(query);
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        System.out.println(result);
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        return result;
+    }
+
     private CypherResult executeCypherQuery(String query, Map<String, Object> params) throws Exception {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(query);
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        CypherResult result = qe.executeCypherQuery(query, params);
+        CypherResult result = uplink.executeCypherQuery(query, params);
         System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
         System.out.println(result);
         System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
@@ -119,10 +130,11 @@ public class Neo4jRestServiceIT {
     @OperateOnDeployment("test-candidate")
     public void cypherErrorTest() throws Exception {
         try {
-            executeCypherQuery("START n=node(*) WHERE n.name!=\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
+            executeCypherQuery("START n=node(*) WHERE n.name!= \"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
+            fail("must throw Exception");
         } catch (Exception exception) {
-            assertThat(exception).isInstanceOf(CypherException.class);
-            assertThat(exception.getMessage()).startsWith("Cypher-Exception: SyntaxException");
+            assertThat(exception).isInstanceOf(Neo4jServerException.class);
+            assertThat(exception.getMessage()).startsWith("SyntaxException");
         }
     }
 
@@ -242,5 +254,44 @@ public class Neo4jRestServiceIT {
 
         assertThat(aggregateResult)
                 .hasSize(3).doesNotHaveDuplicates().containsOnly("The Matrix", "The Matrix Reloaded", "The Matrix Revolutions");
+    }
+
+    @Test
+    @OperateOnDeployment("test-candidate")
+    public void labelsTest() throws Exception {
+        CypherResult result = executeCypherQuery("start n=node(*) where HAS(n.name) return ID(n)", Collections.<String, Object>emptyMap());
+
+        int id = -1;
+        for (Object o : result.getColumnValues(0)) {
+            id = ((Long) o).intValue();
+            String[] labelsBeforeAdd = uplink.getNodeLabels(id);
+            assertThat(labelsBeforeAdd).isEmpty();
+
+            assertThat(uplink.addNodeLabel(id, "actor")).isTrue();
+            String[] labelsAfterSingleAdd = uplink.getNodeLabels(id);
+            assertThat(labelsAfterSingleAdd).hasSize(1).containsOnly("actor");
+        }
+        assertThat(id).isGreaterThanOrEqualTo(0);
+
+        assertThat(uplink.addNodeLabel(id, "favorite_actor", "matrix_actor")).isTrue();
+
+        String[] labelsAfterMultiAdd = uplink.getNodeLabels(id);
+        assertThat(labelsAfterMultiAdd).hasSize(3).containsOnly("actor", "matrix_actor", "favorite_actor");
+
+        Node[] nodes = uplink.getNodesWithLabelAndProperties("matrix_actor", Collections.<String, Object>singletonMap("name", "Keanu Reeves"));
+        assertThat(nodes).hasSize(1);
+        assertThat(nodes[0].getPropertyValue("name")).isEqualTo("Keanu Reeves");
+        assertThat(nodes[0].getId()).isEqualTo(id);
+
+        nodes = uplink.getNodesWithLabel("actor");
+        assertThat(nodes).hasSize(result.getRowCount());
+
+        result = executeCypherQuery("START n=node(*) WHERE n:actor RETURN n");
+        assertThat(result.getRowCount()).isEqualTo(nodes.length);
+
+        result = executeCypherQuery("START n=node(*) WHERE n:matrix_actor:favorite_actor:actor RETURN n");
+        assertThat(result.getRowCount()).isEqualTo(1);
+        assertThat(result.getValue(0, "n")).isInstanceOf(Node.class);
+        assertThat(((Node) result.getValue(0, "n")).getId()).isEqualTo(id);
     }
 }
