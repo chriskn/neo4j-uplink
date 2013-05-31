@@ -2,6 +2,7 @@ package de.herschke.neo4j.uplink.ejb.utils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +17,10 @@ import org.json.simple.JSONStreamAware;
  */
 public final class JSONHelper {
 
+    private static boolean isJSONAware(Object value) {
+        return value == null || value instanceof String || value instanceof Double || value instanceof Float || value instanceof Number || value instanceof Boolean || value instanceof JSONStreamAware || value instanceof JSONAware || value instanceof Map || value instanceof List;
+    }
+
     private JSONHelper() {
         // don't allow instantiation.
     }
@@ -29,10 +34,12 @@ public final class JSONHelper {
     }
 
     private static void addToJSONObject(JSONObject object, String prefix, Object value) {
-        if (value == null || value instanceof String || value instanceof Double || value instanceof Float || value instanceof Number || value instanceof Boolean || value instanceof JSONStreamAware || value instanceof JSONAware || value instanceof Map || value instanceof List) {
+        if (isJSONAware(value)) {
             object.put(prefix, value);
         } else if (value instanceof Class) {
             object.put(prefix, ((Class) value).getSimpleName());
+        } else if (value instanceof Date) {
+            object.put(prefix, Long.valueOf(((Date) value).getTime()));
         } else {
             try {
                 JSONObject innerObject = new JSONObject();
@@ -41,7 +48,16 @@ public final class JSONHelper {
                         String name = method.getName().startsWith("get") ? (method.getName().substring(3, 4).toLowerCase() + method.getName().substring(4)) : (method.getName().substring(2, 3).toLowerCase() + method.getName().substring(3));
                         final Object newValue = method.invoke(value);
                         addToJSONObject(object, prefix + "." + name, newValue);
-                        innerObject.put(name, newValue);
+                        if (isJSONAware(newValue)) {
+                            innerObject.put(name, newValue);
+                        } else if (newValue instanceof Class) {
+                            innerObject.put(name, ((Class) newValue).getSimpleName());
+                        } else if (newValue instanceof Date) {
+                            innerObject.put(name, Long.valueOf(((Date) newValue).getTime()));
+                        } else {
+                            innerObject.put(name, newValue.toString());
+                        }
+
                     }
                 }
                 object.put(prefix, innerObject);

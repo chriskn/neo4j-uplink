@@ -7,13 +7,13 @@ import de.herschke.neo4j.uplink.api.Node;
 import de.herschke.neo4j.uplink.api.Relationship;
 import java.io.File;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
 import static org.fest.assertions.Assertions.assertThat;
 import org.fest.assertions.MapAssert;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.container.test.api.OperateOnDeployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
@@ -28,6 +28,19 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class Neo4jRestServiceIT {
+
+    public static class Dummy {
+
+        private final Date date;
+
+        public Dummy(Date date) {
+            this.date = date;
+        }
+
+        public Date getDate() {
+            return date;
+        }
+    }
 
     public static class Movie {
 
@@ -58,7 +71,7 @@ public class Neo4jRestServiceIT {
     @EJB
     Neo4jUplink uplink;
 
-    @Deployment(order = 2, name = "test-candidate")
+    @Deployment
     public static WebArchive createTestArchive() {
         WebArchive wa = ShrinkWrap.create(WebArchive.class, "sample.war");
         wa.addClasses(Neo4jRestService.class);
@@ -96,7 +109,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void simpleQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("START n=node(0) RETURN count(n)", Collections.<String, Object>emptyMap());
         assertThat(result).isNotNull();
@@ -105,14 +117,12 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void noResultTest() throws Exception {
         CypherResult result = executeCypherQuery("START n=node(*) WHERE HAS(n.xyz) RETURN n", Collections.<String, Object>emptyMap());
         assertThat(result).isNotNull().isEmpty();
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void createRelationTest() throws Exception {
         CypherResult result = executeCypherQuery(""
                 + "START"
@@ -127,7 +137,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void cypherErrorTest() throws Exception {
         try {
             executeCypherQuery("START n=node(*) WHERE n.name!= \"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
@@ -139,7 +148,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void propertiesMustExistTest() throws Exception {
         CypherResult result = null;
         result = executeCypherQuery("START n=node(*) WHERE n.name! =\"Keanu Reeves\" RETURN n.name", Collections.<String, Object>emptyMap());
@@ -153,7 +161,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void nodeQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node:node_auto_index(name=\"Keanu Reeves\") return n", Collections.<String, Object>emptyMap());
         assertThat(result).isNotNull();
@@ -167,7 +174,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void queryWithObjectParameterTest() throws Exception {
         Movie newMovie = new Movie("Star Trek - Into Darkness", "2013-05-09");
         CypherResult result = executeCypherQuery("create (n {newMovie}) return n", Collections.<String, Object>singletonMap("newMovie", newMovie));
@@ -189,7 +195,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void relationshipQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node:node_auto_index(name=\"Keanu Reeves\") match n-[r:ACTS_IN]->m return r, ID(n), ID(m)", Collections.<String, Object>emptyMap());
 
@@ -211,7 +216,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void multipleColumnsQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node:node_auto_index(name={actorname}) \n"
                 + "match n-[r:ACTS_IN]->m \n"
@@ -235,7 +239,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void aggregateQueryTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node:node_auto_index(name={actorname}) "
                 + "match n-[ACTS_IN]->m \n"
@@ -257,7 +260,6 @@ public class Neo4jRestServiceIT {
     }
 
     @Test
-    @OperateOnDeployment("test-candidate")
     public void labelsTest() throws Exception {
         CypherResult result = executeCypherQuery("start n=node(*) where HAS(n.name) return ID(n)", Collections.<String, Object>emptyMap());
 
@@ -293,5 +295,14 @@ public class Neo4jRestServiceIT {
         assertThat(result.getRowCount()).isEqualTo(1);
         assertThat(result.getValue(0, "n")).isInstanceOf(Node.class);
         assertThat(((Node) result.getValue(0, "n")).getId()).isEqualTo(id);
+    }
+
+    @Test
+    public void dateParameterTest() throws Exception {
+        Date date = new Date();
+        Dummy dummy = new Dummy(date);
+        CypherResult result = executeCypherQuery("CREATE (n {dummy}) RETURN n.date", Collections.<String, Object>singletonMap("dummy", dummy));
+        assertThat(result).isNotEmpty();
+        assertThat((Long) result.getValue(0, "n.date")).isEqualTo(date.getTime());
     }
 }
