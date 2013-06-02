@@ -39,7 +39,10 @@
  */
 package de.herschke.neo4j.uplink.ejb.response.conversion;
 
+import de.herschke.neo4j.uplink.api.annotations.Result;
 import de.herschke.neo4j.uplink.ejb.utils.ResultHelper;
+import de.herschke.scripting.annotations.Scripted;
+import de.herschke.scripting.processor.ScriptedMethodInvoker;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -60,7 +63,7 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author rhk
  */
-public abstract class AbstractInvocationHandler<P> implements InvocationHandler {
+public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker implements InvocationHandler {
 
     private final static Pattern getterPattern = Pattern.compile("(?:get|is)([\\w$]+)");
 
@@ -117,10 +120,18 @@ public abstract class AbstractInvocationHandler<P> implements InvocationHandler 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("toString".equals(method.getName())) {
             return handleToString();
+        } else if (method.isAnnotationPresent(Scripted.class)) {
+            return super.invoke(proxy, method, false, args);
         } else {
             Matcher m = getterPattern.matcher(method.getName());
             if (m.matches()) {
-                return handleGetter(method.getReturnType(), method.getGenericReturnType(), StringUtils.uncapitalize(m.group(1)));
+                String propertyName;
+                if (method.isAnnotationPresent(Result.class)) {
+                    propertyName = method.getAnnotation(Result.class).column();
+                } else {
+                    propertyName = StringUtils.uncapitalize(m.group(1));
+                }
+                return handleGetter(method.getReturnType(), method.getGenericReturnType(), propertyName);
             }
         }
         throw new UnsupportedOperationException("method: " + method.toGenericString() + " is not supported!");
