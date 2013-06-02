@@ -1,3 +1,42 @@
+/*
+ * This file is part of the Uplink Framework for Neo4j Server Connection.
+ *
+ * Copyright (c) by:
+ *
+ * Robert Herschke
+ * Hauptstrasse 30
+ * 65760 Eschborn
+ * Germany
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the author nor the names of its contributors may be
+ *    used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
 package de.herschke.neo4j.uplink.ejb;
 
 import com.sun.jersey.api.client.Client;
@@ -6,14 +45,16 @@ import de.herschke.neo4j.uplink.api.CypherResult;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Neo4jUplink;
 import de.herschke.neo4j.uplink.api.Node;
-import de.herschke.neo4j.uplink.ejb.calls.AddNodeLabelsRequest;
-import de.herschke.neo4j.uplink.ejb.calls.CreateNodeIndexRequest;
-import de.herschke.neo4j.uplink.ejb.calls.CreateSchemaIndexRequest;
-import de.herschke.neo4j.uplink.ejb.calls.ExecuteCypherRequest;
-import de.herschke.neo4j.uplink.ejb.calls.GetNodeLabelsRequest;
-import de.herschke.neo4j.uplink.ejb.calls.GetNodesWithLabelRequest;
-import de.herschke.neo4j.uplink.ejb.calls.Neo4jServerCall;
+import de.herschke.neo4j.uplink.ejb.request.AddNodeLabelsRequest;
+import de.herschke.neo4j.uplink.ejb.request.CreateNodeIndexRequest;
+import de.herschke.neo4j.uplink.ejb.request.CreateSchemaIndexRequest;
+import de.herschke.neo4j.uplink.ejb.request.ExecuteCypherRequest;
+import de.herschke.neo4j.uplink.ejb.request.GetNodeLabelsRequest;
+import de.herschke.neo4j.uplink.ejb.request.GetNodesWithLabelRequest;
+import de.herschke.neo4j.uplink.ejb.request.Neo4jServerCall;
+import de.herschke.neo4j.uplink.ejb.utils.ResultList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -84,5 +125,25 @@ public class Neo4jRestService implements Neo4jUplink {
     @Override
     public Node[] getNodesWithLabelAndProperties(String labelName, Map<String, Object> properties) throws Neo4jServerException {
         return executeServerCall(new GetNodesWithLabelRequest(labelName, properties));
+    }
+
+    @Override
+    public <T> List<T> executeCypherQuery(Class<T> type, String query) throws Neo4jServerException {
+        return executeCypherQuery(type, query, Collections.<String, Object>emptyMap());
+    }
+
+    @Override
+    public <T> List<T> executeCypherQuery(Class<T> type, String query, Map<String, Object> params) throws Neo4jServerException {
+        final CypherResult result = executeCypherQuery(query, params);
+        if (result == null) {
+            return null;
+        } else if (type.isInterface()) {
+            return convertResult(type, result);
+        }
+        throw new IllegalArgumentException("Type for conversion must be an interface!");
+    }
+
+    private <T> List<T> convertResult(final Class<T> type, final CypherResult result) {
+        return new ResultList(result, type);
     }
 }

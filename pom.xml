@@ -9,6 +9,43 @@
     <name>Neo4j ReST Facade</name>
     <url>https://github.com/rherschke/neo4j-uplink</url>
     
+	<inceptionYear>2013</inceptionYear>
+
+	<licenses>
+		<license>
+			<name>The BSD License</name>
+			<url>https://github.com/rherschke/neo4j-uplink/license.txt</url>
+			<comments>
+				This project was created by:
+				
+				Robert Herschke
+				Hauptstrasse 30
+				65760 Eschborn
+				Germany
+				
+				All rights reserved.
+
+				The above mentioned author kindly requests to be
+				informed about any usage, redistributions,
+				modification and improvements made to the original
+				source code. This is not a must.
+			</comments>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id>rherschke</id>
+			<name>Robert Herschke</name>
+			<email>github@sonstiges.herschke.de</email>
+			<roles>
+				<role>Engineer</role>
+				<role>Developer</role>
+				<role>Technical Quality Assurance</role>
+			</roles>
+		</developer>
+	</developers>
+    
     <modules>
         <module>neo4j-uplink-api</module>
         <module>neo4j-uplink-ejb</module>

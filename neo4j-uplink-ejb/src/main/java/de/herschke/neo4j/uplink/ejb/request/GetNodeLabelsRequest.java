@@ -37,51 +37,55 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.api;
+package de.herschke.neo4j.uplink.ejb.request;
 
-import java.io.Serializable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.json.simple.JSONObject;
+import com.sun.jersey.api.client.ClientResponse;
+import de.herschke.neo4j.uplink.api.Neo4jServerException;
+import java.io.IOException;
+import java.io.Reader;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 /**
- * the base class for node or relationships of a graph
+ * creates labels for nodes.
  *
  * @author rhk
  */
-public abstract class GraphEntity implements Serializable {
+public class GetNodeLabelsRequest extends AbstractNeo4jServerCall<String[]> {
 
-    protected static final Pattern selfUrlPattern = Pattern.compile("http://.+/db/data/(node|relationship)/(\\d+)");
-    private final int id;
-    protected final JSONObject entity;
+    /**
+     * the URI path where the server can create labels for a node
+     */
+    public static final String PATH_FORMAT = "node/%d/labels";
+    private final int nodeId;
 
-    public GraphEntity(String type, JSONObject entity) {
-        if (!entity.containsKey("self") || !entity.containsKey("data")) {
-            throw new IllegalArgumentException("given map is not a graphEntity, must contain 'self' and 'data' entry!");
+    public GetNodeLabelsRequest(int nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    @Override
+    protected String getPath() {
+        return String.format(PATH_FORMAT, nodeId);
+    }
+
+    @Override
+    protected String[] parseResponse(ClientResponse.Status status, Reader responseContent) throws Neo4jServerException {
+        try {
+            final JSONArray array = (JSONArray) JSONValue.parseWithException(responseContent);
+            return (String[]) array.toArray(new String[array.size()]);
+        } catch (IOException | ParseException ex) {
+            throw new Neo4jServerException("cannot parse the response: " + ex.getMessage(), ex);
         }
-        String selfUrl = (String) entity.get("self");
-        Matcher m = selfUrlPattern.matcher(selfUrl);
-        if (m.matches()) {
-            if (type.equalsIgnoreCase(m.group(1))) {
-                this.id = Integer.parseInt(m.group(2));
-                this.entity = entity;
-            } else {
-                throw new IllegalArgumentException("map is not of type: " + type);
-            }
-        } else {
-            throw new IllegalArgumentException("self entry of map must match: " + selfUrlPattern.pattern());
-        }
     }
 
-    public int getId() {
-        return this.id;
+    @Override
+    protected String getRequestEntity() throws Neo4jServerException {
+        return null;
     }
 
-    public Object getPropertyValue(String name) {
-        return ((JSONObject) entity.get("data")).get(name);
-    }
-
-    public boolean hasProperty(String name) {
-        return ((JSONObject) entity.get("data")).containsKey(name);
+    @Override
+    protected String getMethod() {
+        return "GET";
     }
 }

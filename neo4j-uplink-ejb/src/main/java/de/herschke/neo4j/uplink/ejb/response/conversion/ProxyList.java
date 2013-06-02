@@ -37,51 +37,42 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.api;
+package de.herschke.neo4j.uplink.ejb.response.conversion;
 
-import java.io.Serializable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.json.simple.JSONObject;
+import de.herschke.neo4j.uplink.ejb.utils.ResultHelper;
+import java.lang.reflect.Proxy;
+import java.util.AbstractList;
+import java.util.List;
+import java.util.Map;
 
 /**
- * the base class for node or relationships of a graph
  *
  * @author rhk
  */
-public abstract class GraphEntity implements Serializable {
+public class ProxyList<T> extends AbstractList<T> {
 
-    protected static final Pattern selfUrlPattern = Pattern.compile("http://.+/db/data/(node|relationship)/(\\d+)");
-    private final int id;
-    protected final JSONObject entity;
+    private final Class<T> proxyInterface;
+    private final List<Map<String, Object>> data;
 
-    public GraphEntity(String type, JSONObject entity) {
-        if (!entity.containsKey("self") || !entity.containsKey("data")) {
-            throw new IllegalArgumentException("given map is not a graphEntity, must contain 'self' and 'data' entry!");
-        }
-        String selfUrl = (String) entity.get("self");
-        Matcher m = selfUrlPattern.matcher(selfUrl);
-        if (m.matches()) {
-            if (type.equalsIgnoreCase(m.group(1))) {
-                this.id = Integer.parseInt(m.group(2));
-                this.entity = entity;
-            } else {
-                throw new IllegalArgumentException("map is not of type: " + type);
-            }
-        } else {
-            throw new IllegalArgumentException("self entry of map must match: " + selfUrlPattern.pattern());
-        }
+    public ProxyList(Class<T> proxyInterface, Map<String, Object> data) {
+        this.proxyInterface = proxyInterface;
+        this.data = ResultHelper.invert(data, "");
     }
 
-    public int getId() {
-        return this.id;
+    public ProxyList(Class<T> proxyInterface, List<Map<String, Object>> data) {
+        this.proxyInterface = proxyInterface;
+        this.data = data;
     }
 
-    public Object getPropertyValue(String name) {
-        return ((JSONObject) entity.get("data")).get(name);
+    @Override
+    public T get(int index) {
+        T proxy = (T) Proxy.newProxyInstance(proxyInterface.getClassLoader(), new Class<?>[]{proxyInterface}, new MapInvocationHandler(data.get(index)));
+        return proxy;
     }
 
-    public boolean hasProperty(String name) {
-        return ((JSONObject) entity.get("data")).containsKey(name);
+    @Override
+    public int size() {
+        return data.size();
     }
+
 }

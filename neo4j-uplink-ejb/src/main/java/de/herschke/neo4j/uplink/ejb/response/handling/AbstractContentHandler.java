@@ -37,51 +37,58 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.api;
+package de.herschke.neo4j.uplink.ejb.response.handling;
 
-import java.io.Serializable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.json.simple.JSONObject;
+import java.io.IOException;
+import org.json.simple.parser.ContentHandler;
+import org.json.simple.parser.ParseException;
 
 /**
- * the base class for node or relationships of a graph
  *
  * @author rhk
  */
-public abstract class GraphEntity implements Serializable {
+public abstract class AbstractContentHandler implements ContentHandler {
 
-    protected static final Pattern selfUrlPattern = Pattern.compile("http://.+/db/data/(node|relationship)/(\\d+)");
-    private final int id;
-    protected final JSONObject entity;
-
-    public GraphEntity(String type, JSONObject entity) {
-        if (!entity.containsKey("self") || !entity.containsKey("data")) {
-            throw new IllegalArgumentException("given map is not a graphEntity, must contain 'self' and 'data' entry!");
-        }
-        String selfUrl = (String) entity.get("self");
-        Matcher m = selfUrlPattern.matcher(selfUrl);
-        if (m.matches()) {
-            if (type.equalsIgnoreCase(m.group(1))) {
-                this.id = Integer.parseInt(m.group(2));
-                this.entity = entity;
-            } else {
-                throw new IllegalArgumentException("map is not of type: " + type);
-            }
-        } else {
-            throw new IllegalArgumentException("self entry of map must match: " + selfUrlPattern.pattern());
-        }
+    @Override
+    public void startJSON() throws ParseException, IOException {
     }
 
-    public int getId() {
-        return this.id;
+    @Override
+    public void endJSON() throws ParseException, IOException {
     }
 
-    public Object getPropertyValue(String name) {
-        return ((JSONObject) entity.get("data")).get(name);
+    @Override
+    public boolean startObject() throws ParseException, IOException {
+        return true;
     }
 
-    public boolean hasProperty(String name) {
-        return ((JSONObject) entity.get("data")).containsKey(name);
+    @Override
+    public boolean endObject() throws ParseException, IOException {
+        return true;
+    }
+
+    @Override
+    public boolean startObjectEntry(String key) throws ParseException, IOException {
+        return true;
+    }
+
+    @Override
+    public boolean endObjectEntry() throws ParseException, IOException {
+        return true;
+    }
+
+    @Override
+    public boolean startArray() throws ParseException, IOException {
+        return true;
+    }
+
+    @Override
+    public boolean endArray() throws ParseException, IOException {
+        return true;
+    }
+
+    @Override
+    public boolean primitive(Object value) throws ParseException, IOException {
+        return true;
     }
 }
