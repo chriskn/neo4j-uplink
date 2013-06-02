@@ -53,14 +53,22 @@ import java.util.Map;
 public class MapInvocationHandler<P> extends AbstractInvocationHandler<P> {
 
     private final Map<String, Object> data;
+    private final AbstractInvocationHandler<P> fallback;
 
-    public MapInvocationHandler(Map<String, Object> data) {
+    public MapInvocationHandler(Map<String, Object> data, AbstractInvocationHandler<P> fallback) {
         this.data = data;
+        this.fallback = fallback;
     }
 
     @Override
     protected Object getPropertyValue(String property) {
-        return this.data.get(property);
+        if (this.data.containsKey(property)) {
+            return this.data.get(property);
+        } else if (fallback != null) {
+            return fallback.getPropertyValue(property);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -69,7 +77,7 @@ public class MapInvocationHandler<P> extends AbstractInvocationHandler<P> {
         if (value == null) {
             return null;
         } else if (value instanceof GraphEntity) {
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value, this));
         } else {
             Map<String, Object> subData = new HashMap<>();
             for (Map.Entry<String, Object> entry : data.entrySet()) {
@@ -77,7 +85,7 @@ public class MapInvocationHandler<P> extends AbstractInvocationHandler<P> {
                     subData.put(entry.getKey().substring(property.length() + 1), entry.getValue());
                 }
             }
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData, this));
         }
     }
 

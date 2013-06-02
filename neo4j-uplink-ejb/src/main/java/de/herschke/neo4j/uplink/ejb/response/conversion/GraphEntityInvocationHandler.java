@@ -52,14 +52,22 @@ import java.util.List;
 public class GraphEntityInvocationHandler<P> extends AbstractInvocationHandler<P> {
 
     private final GraphEntity entity;
+    private final AbstractInvocationHandler<P> fallback;
 
-    public GraphEntityInvocationHandler(GraphEntity entity) {
+    public GraphEntityInvocationHandler(GraphEntity entity, AbstractInvocationHandler<P> fallback) {
         this.entity = entity;
+        this.fallback = fallback;
     }
 
     @Override
     protected Object getPropertyValue(String property) {
-        return this.entity.getPropertyValue(property);
+        if (this.entity.hasProperty(property)) {
+            return this.entity.getPropertyValue(property);
+        } else if (fallback != null) {
+            return fallback.getPropertyValue(property);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -90,7 +98,7 @@ public class GraphEntityInvocationHandler<P> extends AbstractInvocationHandler<P
         if (value == null) {
             return null;
         } else if (value instanceof GraphEntity) {
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value, this));
         } else {
             throw new ClassCastException("cannot convert: " + value.getClass().getSimpleName() + " to an instance of: " + returnType.getSimpleName() + " for property: " + property);
         }

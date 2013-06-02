@@ -97,7 +97,7 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
 
     private <R> R createProxyForValue(Class<R> returnType, String property, Object value) throws IllegalArgumentException {
         if (value != null && value instanceof GraphEntity) {
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value, this));
         } else if (value != null && value instanceof Iterable) {
             for (Object element : (Iterable) value) {
                 return createProxyForValue(returnType, property, element);
@@ -110,7 +110,7 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
                     subData.put(column.substring(property.length() + 1), result.getValue(rowIndex, column));
                 }
             }
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData, this));
         }
     }
 

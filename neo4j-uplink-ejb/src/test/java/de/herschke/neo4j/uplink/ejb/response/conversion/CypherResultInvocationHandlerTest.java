@@ -74,13 +74,13 @@ public class CypherResultInvocationHandlerTest {
 
     @Parameters
     public static Collection<Object[]> data() {
-        DummyCypherResult thisResult = new DummyCypherResult("this", "actor", "actors") {
+        DummyCypherResult thisResult = new DummyCypherResult("this", "actor", "actors", "myname") {
             @Override
             public String toString() {
                 return "this-result";
             }
         };
-        DummyCypherResult plainResult = new DummyCypherResult("actor.name", "actors.name", "name", "names", "date", "dates", "long", "longs") {
+        DummyCypherResult plainResult = new DummyCypherResult("actor.name", "actors.name", "name", "names", "date", "dates", "long", "longs", "actor.myname") {
             @Override
             public String toString() {
                 return "plain-result";
@@ -100,6 +100,9 @@ public class CypherResultInvocationHandlerTest {
         JSONObject subNodeData2 = new JSONObject();
         subNodeObject2.put("self", "http://localhost:7474/db/data/node/3");
         subNodeObject2.put("data", subNodeData2);
+
+        thisResult.setColumnValues("myname", "Max Mustermann");
+        plainResult.setColumnValues("actor.myname", "Max Mustermann");
 
         plainResult.setColumnValues("name", "Robert Herschke");
         plainResult.setColumnValues("actor.name", "Keanu Reeves");
@@ -277,5 +280,21 @@ public class CypherResultInvocationHandlerTest {
         assertThat(element).isNotNull().isInstanceOf(Actor.class);
         assertThat(Proxy.isProxyClass(element.getClass())).isTrue();
         assertThat(((Actor) element).getName()).isEqualTo("Laurence Fishburne");
+    }
+
+    @Test
+    public void testResultAnnotationSupport() {
+        Object proxy = invocationHandler.handleGetter(Actor.class, null, "actor");
+        assertThat(proxy).isInstanceOf(Actor.class);
+        assertThat(Proxy.isProxyClass(proxy.getClass())).isTrue();
+        assertThat(((Actor) proxy).getNameViaResult()).isEqualTo("Max Mustermann");
+    }
+
+    @Test
+    public void testScriptingSupport() {
+        Object proxy = invocationHandler.handleGetter(Actor.class, null, "actor");
+        assertThat(proxy).isInstanceOf(Actor.class);
+        assertThat(Proxy.isProxyClass(proxy.getClass())).isTrue();
+        assertThat(((Actor) proxy).getOtherName()).isEqualTo("other_Keanu Reeves");
     }
 }

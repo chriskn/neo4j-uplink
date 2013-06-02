@@ -66,7 +66,7 @@ public class ProxyList<T> extends AbstractList<T> {
 
     @Override
     public T get(int index) {
-        T proxy = (T) Proxy.newProxyInstance(proxyInterface.getClassLoader(), new Class<?>[]{proxyInterface}, new MapInvocationHandler(data.get(index)));
+        T proxy = (T) Proxy.newProxyInstance(proxyInterface.getClassLoader(), new Class<?>[]{proxyInterface}, new MapInvocationHandler(data.get(index), null));
         return proxy;
     }
 
