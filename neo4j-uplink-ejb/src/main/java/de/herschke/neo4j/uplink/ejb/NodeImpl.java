@@ -37,18 +37,29 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.api;
+package de.herschke.neo4j.uplink.ejb;
+
+import de.herschke.neo4j.uplink.api.Node;
+import org.json.simple.JSONObject;
 
 /**
- * a simple relationship
+ * a simple node object.
  *
  * @author rhk
  */
-public interface Relationship extends GraphEntity {
+public class NodeImpl extends GraphEntityImpl implements Node {
 
-    int getEndId();
+    public NodeImpl(JSONObject entity) {
+        super("node", entity);
+    }
 
-    int getStartId();
-
-    String getType();
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("(");
+        sb.append(getId());
+        sb.append(" ");
+        sb.append(entity.get("data"));
+        sb.append(")");
+        return sb.toString();
+    }
 }

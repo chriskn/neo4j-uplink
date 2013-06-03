@@ -96,7 +96,7 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
 
     private <R> R createProxyForValue(Class<R> returnType, String property, Object value) throws IllegalArgumentException {
         if (value != null && value instanceof GraphEntity) {
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value, this));
+            return GraphEntityInvocationHandler.createGraphEntityProxy(returnType, (GraphEntity) value, this);
         } else if (value != null && value instanceof Iterable) {
             for (Object element : (Iterable) value) {
                 return createProxyForValue(returnType, property, element);

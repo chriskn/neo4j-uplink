@@ -40,6 +40,9 @@
 package de.herschke.neo4j.uplink.ejb.response.conversion;
 
 import de.herschke.neo4j.uplink.api.GraphEntity;
+import de.herschke.neo4j.uplink.api.Node;
+import de.herschke.neo4j.uplink.api.Relationship;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +57,7 @@ public class GraphEntityInvocationHandler<P> extends AbstractInvocationHandler<P
     private final GraphEntity entity;
     private final AbstractInvocationHandler<P> fallback;
 
-    public GraphEntityInvocationHandler(GraphEntity entity, AbstractInvocationHandler<P> fallback) {
+    private GraphEntityInvocationHandler(GraphEntity entity, AbstractInvocationHandler<P> fallback) {
         this.entity = entity;
         this.fallback = fallback;
     }
@@ -98,9 +101,36 @@ public class GraphEntityInvocationHandler<P> extends AbstractInvocationHandler<P
         if (value == null) {
             return null;
         } else if (value instanceof GraphEntity) {
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new GraphEntityInvocationHandler((GraphEntity) value, this));
+            return createGraphEntityProxy(returnType, (GraphEntity) value, this);
         } else {
             throw new ClassCastException("cannot convert: " + value.getClass().getSimpleName() + " to an instance of: " + returnType.getSimpleName() + " for property: " + property);
+        }
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (method.getDeclaringClass() == Node.class && entity instanceof Node) {
+            // delegate to the entity
+            return method.invoke(entity, args);
+        } else if (method.getDeclaringClass() == Relationship.class && entity instanceof Relationship) {
+            // delegate to the entity
+            return method.invoke(entity, args);
+        } else if (method.getDeclaringClass() == GraphEntity.class) {
+            // delegate to the entity
+            return method.invoke(entity, args);
+        }
+        return super.invoke(proxy, method, args); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public static <R> R createGraphEntityProxy(Class<R> returnType, GraphEntity value, AbstractInvocationHandler fallback) throws IllegalArgumentException {
+        if (value instanceof Node) {
+            return (R) Proxy.newProxyInstance(returnType.getClassLoader(), new Class[]{returnType, Node.class}, new GraphEntityInvocationHandler(value, fallback));
+
+        } else if (value instanceof Relationship) {
+            return (R) Proxy.newProxyInstance(returnType.getClassLoader(), new Class[]{returnType, Relationship.class}, new GraphEntityInvocationHandler(value, fallback));
+
+        } else {
+            throw new IllegalArgumentException("unknown graph entity type: " + value.getClass().getSimpleName());
         }
     }
 }

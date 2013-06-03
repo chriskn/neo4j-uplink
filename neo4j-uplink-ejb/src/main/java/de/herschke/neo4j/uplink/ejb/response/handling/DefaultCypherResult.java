@@ -40,8 +40,8 @@
 package de.herschke.neo4j.uplink.ejb.response.handling;
 
 import de.herschke.neo4j.uplink.api.CypherResult;
-import de.herschke.neo4j.uplink.api.Node;
-import de.herschke.neo4j.uplink.api.Relationship;
+import de.herschke.neo4j.uplink.ejb.NodeImpl;
+import de.herschke.neo4j.uplink.ejb.RelationshipImpl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -153,9 +153,9 @@ class DefaultCypherResult implements CypherResult {
             String selfUrl = (String) ((JSONObject) value).get("self");
             // check if it is a node or a relationship
             if (nodePattern.matcher(selfUrl).matches()) {
-                value = new Node((JSONObject) value);
+                value = new NodeImpl((JSONObject) value);
             } else if (relationshipPattern.matcher(selfUrl).matches()) {
-                value = new Relationship((JSONObject) value);
+                value = new RelationshipImpl((JSONObject) value);
             }
         }
         row.put(columnName, value);

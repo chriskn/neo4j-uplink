@@ -37,60 +37,55 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.ejb.response.conversion;
+package de.herschke.neo4j.uplink.ejb;
 
 import de.herschke.neo4j.uplink.api.GraphEntity;
-import de.herschke.neo4j.uplink.ejb.utils.ResultHelper;
-import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.json.simple.JSONObject;
 
 /**
+ * the base class for node or relationships of a graph
  *
  * @author rhk
  */
-public class MapInvocationHandler<P> extends AbstractInvocationHandler<P> {
+public abstract class GraphEntityImpl implements Serializable, GraphEntity {
 
-    private final Map<String, Object> data;
-    private final AbstractInvocationHandler<P> fallback;
+    protected static final Pattern selfUrlPattern = Pattern.compile("http://.+/db/data/(node|relationship)/(\\d+)");
+    private final int id;
+    protected final JSONObject entity;
 
-    public MapInvocationHandler(Map<String, Object> data, AbstractInvocationHandler<P> fallback) {
-        this.data = data;
-        this.fallback = fallback;
-    }
-
-    @Override
-    protected Object getPropertyValue(String property) {
-        if (this.data.containsKey(property)) {
-            return this.data.get(property);
-        } else if (fallback != null) {
-            return fallback.getPropertyValue(property);
-        } else {
-            return null;
+    public GraphEntityImpl(String type, JSONObject entity) {
+        if (!entity.containsKey("self") || !entity.containsKey("data")) {
+            throw new IllegalArgumentException("given map is not a graphEntity, must contain 'self' and 'data' entry!");
         }
-    }
-
-    @Override
-    protected <R> R createProxyObject(Class<R> returnType, String property) {
-        Object value = getPropertyValue(property);
-        if (value == null) {
-            return null;
-        } else if (value instanceof GraphEntity) {
-            return GraphEntityInvocationHandler.createGraphEntityProxy(returnType, (GraphEntity) value, this);
-        } else {
-            Map<String, Object> subData = new HashMap<>();
-            for (Map.Entry<String, Object> entry : data.entrySet()) {
-                if (entry.getKey().startsWith(property + ".")) {
-                    subData.put(entry.getKey().substring(property.length() + 1), entry.getValue());
-                }
+        String selfUrl = (String) entity.get("self");
+        Matcher m = selfUrlPattern.matcher(selfUrl);
+        if (m.matches()) {
+            if (type.equalsIgnoreCase(m.group(1))) {
+                this.id = Integer.parseInt(m.group(2));
+                this.entity = entity;
+            } else {
+                throw new IllegalArgumentException("map is not of type: " + type);
             }
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData, this));
+        } else {
+            throw new IllegalArgumentException("self entry of map must match: " + selfUrlPattern.pattern());
         }
     }
 
     @Override
-    protected <E> List<E> createProxyList(Class<E> componentType, String property) {
-        return new ProxyList(componentType, ResultHelper.invert(data, property + "."));
+    public int getId() {
+        return this.id;
+    }
+
+    @Override
+    public Object getPropertyValue(String name) {
+        return ((JSONObject) entity.get("data")).get(name);
+    }
+
+    @Override
+    public boolean hasProperty(String name) {
+        return ((JSONObject) entity.get("data")).containsKey(name);
     }
 }

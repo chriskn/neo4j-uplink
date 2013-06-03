@@ -40,7 +40,9 @@
 package de.herschke.neo4j.uplink.ejb.response.conversion;
 
 import de.herschke.neo4j.uplink.api.CypherResult;
+import de.herschke.neo4j.uplink.api.GraphEntity;
 import de.herschke.neo4j.uplink.api.Node;
+import de.herschke.neo4j.uplink.ejb.NodeImpl;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -74,13 +76,13 @@ public class CypherResultInvocationHandlerTest {
 
     @Parameters
     public static Collection<Object[]> data() {
-        DummyCypherResult thisResult = new DummyCypherResult("this", "actor", "actors", "myname") {
+        DummyCypherResult thisResult = new DummyCypherResult("this", "actor", "actors", "myname", "node") {
             @Override
             public String toString() {
                 return "this-result";
             }
         };
-        DummyCypherResult plainResult = new DummyCypherResult("actor.name", "actors.name", "name", "names", "date", "dates", "long", "longs", "actor.myname") {
+        DummyCypherResult plainResult = new DummyCypherResult("actor.name", "actors.name", "name", "names", "date", "dates", "long", "longs", "actor.myname", "node") {
             @Override
             public String toString() {
                 return "plain-result";
@@ -93,12 +95,12 @@ public class CypherResultInvocationHandlerTest {
 
         JSONObject subNodeObject = new JSONObject();
         JSONObject subNodeData = new JSONObject();
-        subNodeObject.put("self", "http://localhost:7474/db/data/node/3");
+        subNodeObject.put("self", "http://localhost:7474/db/data/node/1");
         subNodeObject.put("data", subNodeData);
 
         JSONObject subNodeObject2 = new JSONObject();
         JSONObject subNodeData2 = new JSONObject();
-        subNodeObject2.put("self", "http://localhost:7474/db/data/node/3");
+        subNodeObject2.put("self", "http://localhost:7474/db/data/node/2");
         subNodeObject2.put("data", subNodeData2);
 
         thisResult.setColumnValues("myname", "Max Mustermann");
@@ -139,12 +141,15 @@ public class CypherResultInvocationHandlerTest {
         plainResult.setColumnValues("longs", longArray);
         nodeData.put("longs", longArray);
 
-        thisResult.setColumnValues("this", new Node(nodeObject));
-        thisResult.setColumnValues("actor", new Node(subNodeObject));
+        thisResult.setColumnValues("this", new NodeImpl(nodeObject));
+        thisResult.setColumnValues("actor", new NodeImpl(subNodeObject));
+
+        plainResult.setColumnValues("node", new NodeImpl(subNodeObject));
+        thisResult.setColumnValues("node", new NodeImpl(subNodeObject));
 
         JSONArray nodeArray = new JSONArray();
-        nodeArray.add(new Node(subNodeObject));
-        nodeArray.add(new Node(subNodeObject2));
+        nodeArray.add(new NodeImpl(subNodeObject));
+        nodeArray.add(new NodeImpl(subNodeObject2));
         thisResult.setColumnValues("actors", nodeArray);
 
         Object[][] dataArray = new Object[][]{{plainResult}, {thisResult}};
@@ -245,6 +250,18 @@ public class CypherResultInvocationHandlerTest {
         assertThat(proxy).isInstanceOf(Actor.class);
         assertThat(Proxy.isProxyClass(proxy.getClass())).isTrue();
         assertThat(((Actor) proxy).getName()).isEqualTo("Keanu Reeves");
+    }
+
+    @Test
+    public void testNodeAssignable() {
+        Object proxy = invocationHandler.handleGetter(Actor.class, null, "node");
+        assertThat(proxy).isInstanceOf(Actor.class);
+        assertThat(proxy).isInstanceOf(GraphEntity.class);
+        assertThat(proxy).isInstanceOf(Node.class);
+        assertThat(Proxy.isProxyClass(proxy.getClass())).isTrue();
+        assertThat(((Actor) proxy).getName()).isEqualTo("Keanu Reeves");
+        assertThat(((Node) proxy).getPropertyValue("name")).isEqualTo("Keanu Reeves");
+        assertThat(((Node) proxy).getId()).isEqualTo(1);
     }
 
     @Test

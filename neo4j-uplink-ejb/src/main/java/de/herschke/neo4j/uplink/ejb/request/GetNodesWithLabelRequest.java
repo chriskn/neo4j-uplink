@@ -42,6 +42,7 @@ package de.herschke.neo4j.uplink.ejb.request;
 import com.sun.jersey.api.client.ClientResponse;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
 import de.herschke.neo4j.uplink.api.Node;
+import de.herschke.neo4j.uplink.ejb.NodeImpl;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
@@ -91,7 +92,7 @@ public class GetNodesWithLabelRequest extends AbstractNeo4jServerCall<Node[]> {
             final JSONArray array = (JSONArray) JSONValue.parseWithException(responseContent);
             Node[] nodes = new Node[array.size()];
             for (ListIterator it = array.listIterator(); it.hasNext();) {
-                nodes[it.nextIndex()] = new Node((JSONObject) it.next());
+                nodes[it.nextIndex()] = new NodeImpl((JSONObject) it.next());
             }
             return nodes;
         } catch (IOException | ParseException ex) {
