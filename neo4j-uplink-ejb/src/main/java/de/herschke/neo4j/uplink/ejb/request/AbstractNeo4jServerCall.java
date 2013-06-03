@@ -39,10 +39,10 @@
  */
 package de.herschke.neo4j.uplink.ejb.request;
 
-import de.herschke.neo4j.uplink.ejb.response.conversion.Neo4jServerResponseException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import de.herschke.neo4j.uplink.api.Neo4jServerException;
+import de.herschke.neo4j.uplink.ejb.response.conversion.Neo4jServerResponseException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collections;
@@ -124,9 +124,9 @@ public abstract class AbstractNeo4jServerCall<Res> implements Neo4jServerCall<Re
         }
         ClientResponse response = resource.accept(MediaType.APPLICATION_JSON).type(MediaType.APPLICATION_JSON).method(getMethod(), ClientResponse.class, getRequestEntity());
         if (this.expectedStatus.contains(response.getClientResponseStatus())) {
-            return parseResponse(response.getClientResponseStatus(), new LoggingReader(new InputStreamReader(response.getEntityInputStream(), ENCODING)));
+            return parseResponse(response.getClientResponseStatus(), new InputStreamReader(response.getEntityInputStream(), ENCODING));
         } else if (response.getClientResponseStatus() == ClientResponse.Status.BAD_REQUEST) {
-            throw Neo4jServerResponseException.fromServerResponse(new LoggingReader(new InputStreamReader(response.getEntityInputStream(), ENCODING)));
+            throw Neo4jServerResponseException.fromServerResponse(new InputStreamReader(response.getEntityInputStream(), ENCODING));
         } else {
             throw new Neo4jServerException(String.format("call to Neo4j Server result in response with status: %s reason: %s%n%s%n", response.getClientResponseStatus(), response.getClientResponseStatus().getReasonPhrase(), response));
         }

@@ -68,7 +68,6 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
 
     @Override
     protected Object getPropertyValue(String property) {
-        System.out.println("get value for property: " + property);
         // if `this` entity was not cached before...
         if (this.entity == null) {
             // looking for `this` column in the result set...
@@ -116,7 +115,6 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
 
     @Override
     protected <R> R createProxyObject(Class<R> returnType, String property) throws IllegalArgumentException {
-        System.out.println(String.format("create proxy of class: %s for property: %s", returnType.getSimpleName(), property));
         Object value = getPropertyValue(property);
         return createProxyForValue(returnType, property, value);
     }

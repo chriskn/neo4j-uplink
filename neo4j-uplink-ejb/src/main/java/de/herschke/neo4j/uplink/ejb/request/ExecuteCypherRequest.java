@@ -85,9 +85,6 @@ public class ExecuteCypherRequest extends AbstractNeo4jServerCall<CypherResult> 
         JSONObject object = new JSONObject();
         object.put("query", query);
         object.put("params", JSONHelper.toDeepJSONObject(params));
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        System.out.println(object.toJSONString());
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         return object.toJSONString();
     }
 
@@ -110,7 +107,7 @@ public class ExecuteCypherRequest extends AbstractNeo4jServerCall<CypherResult> 
         try {
             final CypherResponseHandler handler = new CypherResponseHandler();
             JSONParser parser = new JSONParser();
-            parser.parse(new LoggingReader(response), handler);
+            parser.parse(response, handler);
             return handler.getResult();
         } catch (IOException | ParseException ex) {
             throw new Neo4jServerException(String.format("cannot parse the cypher response: %s", ex.getMessage()), ex);
