@@ -97,6 +97,10 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
         return returnType.cast(ConvertUtils.convert(getPropertyValue(property), returnType));
     }
 
+    private <R, E extends Enum<E>> E convertToEnum(Class<R> returnType, String value) {
+        return Enum.valueOf((Class<E>) returnType, value);
+    }
+
     protected <R> R handleGetter(Class<R> returnType, Type genericReturnType, String property) {
         if (Iterable.class.isAssignableFrom(returnType)) {
             final Class<?> genericType = returnType.isArray() ? returnType.getComponentType() : ResultHelper.getGenericType(genericReturnType);
@@ -107,6 +111,8 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
             }
         } else if (returnType.isInterface()) {
             return createProxyObject(returnType, property);
+        } else if (returnType.isEnum()) {
+            return (R) convertToEnum(returnType, (String) getPropertyValue(property));
         } else {
             return (R) ConvertUtils.convert(getPropertyValue(property), returnType);
         }

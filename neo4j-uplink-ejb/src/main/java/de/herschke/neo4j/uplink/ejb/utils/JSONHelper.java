@@ -81,6 +81,8 @@ public final class JSONHelper {
             object.put(prefix, ((Class) value).getSimpleName());
         } else if (value instanceof Date) {
             object.put(prefix, Long.valueOf(((Date) value).getTime()));
+        } else if (value != null && value.getClass().isEnum()) {
+            object.put(prefix, ((Enum) value).name());
         } else if (value != null && value.getClass().isArray()) {
             JSONArray array = new JSONArray();
             array.addAll(Arrays.asList((Object[]) value));
