@@ -41,10 +41,12 @@ package de.herschke.neo4j.uplink.ejb.utils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -79,6 +81,10 @@ public final class JSONHelper {
             object.put(prefix, ((Class) value).getSimpleName());
         } else if (value instanceof Date) {
             object.put(prefix, Long.valueOf(((Date) value).getTime()));
+        } else if (value != null && value.getClass().isArray()) {
+            JSONArray array = new JSONArray();
+            array.addAll(Arrays.asList((Object[]) value));
+            object.put(prefix, array);
         } else if (value != null) {
             try {
                 JSONObject innerObject = new JSONObject();
