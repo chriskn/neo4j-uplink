@@ -144,6 +144,6 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
 
     @Override
     public String toString() {
-        return "CypherResult: " + this.result;
+        return "CypherResult: \n" + this.result;
     }
 }

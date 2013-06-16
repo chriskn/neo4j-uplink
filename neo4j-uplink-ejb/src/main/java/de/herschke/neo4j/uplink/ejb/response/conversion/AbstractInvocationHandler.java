@@ -102,7 +102,7 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
     }
 
     protected <R> R handleGetter(Class<R> returnType, Type genericReturnType, String property) {
-        if (Iterable.class.isAssignableFrom(returnType)) {
+        if (Iterable.class.isAssignableFrom(returnType) || returnType.isArray()) {
             final Class<?> genericType = returnType.isArray() ? returnType.getComponentType() : ResultHelper.getGenericType(genericReturnType);
             if (genericType.isInterface()) {
                 return convertToReturnType(returnType, genericType, createProxyList(genericType, property));

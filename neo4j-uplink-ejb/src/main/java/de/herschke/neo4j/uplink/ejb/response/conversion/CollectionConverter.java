@@ -63,6 +63,15 @@ public class CollectionConverter extends ArrayConverter {
         this.genericType = genericType;
     }
 
+    private Object convertToEnum(Object element) {
+        for (Object o : this.genericType.getEnumConstants()) {
+            if (((Enum) o).name().equalsIgnoreCase(element.toString())) {
+                return o;
+            }
+        }
+        return element;
+    }
+
     @Override
     protected Object convertToType(Class type, Object value) throws Throwable {
         // Handle the source
@@ -80,10 +89,15 @@ public class CollectionConverter extends ArrayConverter {
 
         // Convert and set each element in the new Array
         for (int i = 0; i < size; i++) {
-            Object element = iterator == null ? Array.get(value, i) : iterator.next();
+            Object element = iterator == null ? Array.get(value, i) : iterator
+                    .next();
             // TODO - probably should catch conversion errors and throw
             //        new exception providing better info back to the user
-            element = ConvertUtils.convert(element, this.genericType);
+            if (this.genericType.isEnum()) {
+                element = convertToEnum(element);
+            } else {
+                element = ConvertUtils.convert(element, this.genericType);
+            }
             Array.set(newArray, i, element);
         }
 
@@ -114,7 +128,8 @@ public class CollectionConverter extends ArrayConverter {
                 }
             });
         } else {
-            throw new ClassCastException("cannot convert the array to: " + type.getSimpleName());
+            throw new ClassCastException("cannot convert the array to: " + type
+                    .getSimpleName());
         }
     }
 }
