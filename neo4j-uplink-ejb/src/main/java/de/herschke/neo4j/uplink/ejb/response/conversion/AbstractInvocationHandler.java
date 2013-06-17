@@ -63,17 +63,22 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author rhk
  */
-public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker implements InvocationHandler {
+public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
+        implements InvocationHandler {
 
-    private final static Pattern getterPattern = Pattern.compile("(?:get|is)([\\w$]+)");
+    private final static Pattern getterPattern = Pattern.compile(
+            "(?:get|is)([\\w$]+)");
 
     protected abstract Object getPropertyValue(String property);
 
-    protected abstract <R> R createProxyObject(Class<R> returnType, String property);
+    protected abstract <R> R createProxyObject(Class<R> returnType,
+            String property);
 
-    protected abstract <E> List<E> createProxyList(final Class<E> componentType, final String property);
+    protected abstract <E> List<E> createProxyList(final Class<E> componentType,
+            final String property);
 
-    protected <R, E> R convertToReturnType(Class<R> returnType, Class<E> componentType, List list) {
+    protected <R, E> R convertToReturnType(Class<R> returnType,
+            Class<E> componentType, List list) {
         if (list == null) {
             return null;
         } else if (returnType.isArray()) {
@@ -87,34 +92,49 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
         } else if (Set.class.isAssignableFrom(returnType)) {
             return returnType.cast(new HashSet<>(list));
         } else {
-            throw new IllegalStateException("unknown collection type: " + returnType.getSimpleName());
+            throw new IllegalStateException("unknown collection type: "
+                    + returnType.getSimpleName());
         }
     }
 
-    private <R, E> R handleCollectionGetter(Class<R> returnType, Class<E> componentType, String property) {
+    private <R, E> R handleCollectionGetter(Class<R> returnType,
+            Class<E> componentType, String property) {
         ConvertUtils.deregister(returnType);
-        ConvertUtils.register(new CollectionConverter(componentType), returnType);
-        return returnType.cast(ConvertUtils.convert(getPropertyValue(property), returnType));
+        ConvertUtils
+                .register(new CollectionConverter(componentType), returnType);
+        return returnType.cast(ConvertUtils.convert(getPropertyValue(property),
+                returnType));
     }
 
-    private <R, E extends Enum<E>> E convertToEnum(Class<R> returnType, String value) {
+    private <R, E extends Enum<E>> E convertToEnum(Class<R> returnType,
+            String value) {
         return Enum.valueOf((Class<E>) returnType, value);
     }
 
-    protected <R> R handleGetter(Class<R> returnType, Type genericReturnType, String property) {
+    protected <R> R handleGetter(Class<R> returnType, Type genericReturnType,
+            String property) {
         if (Iterable.class.isAssignableFrom(returnType) || returnType.isArray()) {
-            final Class<?> genericType = returnType.isArray() ? returnType.getComponentType() : ResultHelper.getGenericType(genericReturnType);
+            final Class<?> genericType = returnType.isArray() ? returnType
+                    .getComponentType() : ResultHelper.getGenericType(
+                    genericReturnType);
             if (genericType.isInterface()) {
-                return convertToReturnType(returnType, genericType, createProxyList(genericType, property));
+                return convertToReturnType(returnType, genericType,
+                        createProxyList(genericType, property));
             } else {
                 return handleCollectionGetter(returnType, genericType, property);
             }
         } else if (returnType.isInterface()) {
             return createProxyObject(returnType, property);
-        } else if (returnType.isEnum()) {
-            return (R) convertToEnum(returnType, (String) getPropertyValue(property));
         } else {
-            return (R) ConvertUtils.convert(getPropertyValue(property), returnType);
+            Object value = getPropertyValue(property);
+            if (value == null) {
+                return null;
+            } else if (returnType.isEnum()) {
+                return (R) convertToEnum(returnType, (String) value);
+            } else {
+                return (R) ConvertUtils.convert(value,
+                        returnType);
+            }
         }
     }
 
@@ -123,7 +143,8 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) throws
+            Throwable {
         if ("toString".equals(method.getName())) {
             return handleToString();
         } else if (method.isAnnotationPresent(Scripted.class)) {
@@ -137,10 +158,12 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
                 } else {
                     propertyName = StringUtils.uncapitalize(m.group(1));
                 }
-                return handleGetter(method.getReturnType(), method.getGenericReturnType(), propertyName);
+                return handleGetter(method.getReturnType(), method
+                        .getGenericReturnType(), propertyName);
             }
         }
-        throw new UnsupportedOperationException("method: " + method.toGenericString() + " is not supported!");
+        throw new UnsupportedOperationException("method: " + method
+                .toGenericString() + " is not supported!");
     }
 
     static {
@@ -150,6 +173,7 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
         conv.setLocale(Locale.getDefault());
         conv.setUseLocaleFormat(true);
         ConvertUtils.register(conv, Date.class);
-        ConvertUtils.register(new ArrayConverter(Object[].class, conv), Date[].class);
+        ConvertUtils.register(new ArrayConverter(Object[].class, conv),
+                Date[].class);
     }
 }
