@@ -60,7 +60,7 @@
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>scripting-annotations</artifactId>
-            <version>[1.0.0,)</version>
+            <version>[1.0.2-SNAPSHOT,)</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -244,7 +244,7 @@
                                     <goal>start-server</goal>
                                 </goals>
                                 <configuration>
-                                    <port>7474</port>
+                                    <port>17474</port>
                                     <bootstrapCypher><![CDATA[
                                        create (matrix1 {id : '603', title : 'The Matrix', year : '1999-03-31'}),
                                         (matrix2 {id : '604', title : 'The Matrix Reloaded', year : '2003-05-07'}),
