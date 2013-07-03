@@ -39,10 +39,12 @@
  */
 package de.herschke.neo4j.uplink.ejb.response.conversion;
 
+import de.herschke.neo4j.uplink.api.annotations.Discriminator;
 import de.herschke.neo4j.uplink.api.annotations.Result;
 import de.herschke.neo4j.uplink.ejb.utils.ResultHelper;
 import de.herschke.scripting.annotations.Scripted;
 import de.herschke.scripting.processor.ScriptedMethodInvoker;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -142,6 +144,20 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
         return "";
     }
 
+    private int getDiscrimitatorParameter(Method method) {
+        Annotation[][] parameterAnnotations =
+                method.getParameterAnnotations();
+        for (int i = 0; i < parameterAnnotations.length; i++) {
+            Annotation[] annotations = parameterAnnotations[i];
+            for (Annotation annotation : annotations) {
+                if (Discriminator.class == annotation.annotationType()) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws
             Throwable {
@@ -153,8 +169,11 @@ public abstract class AbstractInvocationHandler<P> extends ScriptedMethodInvoker
             Matcher m = getterPattern.matcher(method.getName());
             if (m.matches()) {
                 String propertyName;
+                int discriminator = getDiscrimitatorParameter(method);
                 if (method.isAnnotationPresent(Result.class)) {
                     propertyName = method.getAnnotation(Result.class).column();
+                } else if (discriminator >= 0) {
+                    propertyName = ConvertUtils.convert(args[discriminator]);
                 } else {
                     propertyName = StringUtils.uncapitalize(m.group(1));
                 }

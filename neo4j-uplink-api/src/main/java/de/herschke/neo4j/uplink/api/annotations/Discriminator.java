@@ -37,22 +37,20 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-package de.herschke.neo4j.uplink.api;
+package de.herschke.neo4j.uplink.api.annotations;
 
-import java.util.Set;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * the base for node or relationships of a graph
+ * tells the result converter to use the method parameter that is tagged by this
+ * annotation as a discriminator for the result of the method
  *
  * @author rhk
  */
-public interface GraphEntity {
-
-    int getId();
-
-    Object getPropertyValue(String name);
-
-    boolean hasProperty(String name);
-
-    Set<String> getPropertyNames();
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.PARAMETER})
+public @interface Discriminator {
 }

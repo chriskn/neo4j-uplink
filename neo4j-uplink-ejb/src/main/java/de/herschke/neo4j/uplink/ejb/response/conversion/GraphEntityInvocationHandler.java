@@ -119,7 +119,7 @@ public class GraphEntityInvocationHandler<P> extends AbstractInvocationHandler<P
             // delegate to the entity
             return method.invoke(entity, args);
         }
-        return super.invoke(proxy, method, args); //To change body of generated methods, choose Tools | Templates.
+        return super.invoke(proxy, method, args);
     }
 
     public static <R> R createGraphEntityProxy(Class<R> returnType, GraphEntity value, AbstractInvocationHandler fallback) throws IllegalArgumentException {

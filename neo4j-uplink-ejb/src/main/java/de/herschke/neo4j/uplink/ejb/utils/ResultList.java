@@ -67,7 +67,13 @@ public class ResultList<T> extends AbstractList<T> {
             throw new ArrayIndexOutOfBoundsException(index);
         }
         if (proxies[index] == null) {
-            proxies[index] = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, new CypherResultInvocationHandler("", result, index));
+            proxies[index] = (T) Proxy.newProxyInstance(
+                    type.getClassLoader(),
+                    new Class[]{type,
+                CypherResult.class},
+                    new CypherResultInvocationHandler("",
+                    result,
+                    index));
         }
         return proxies[index];
     }

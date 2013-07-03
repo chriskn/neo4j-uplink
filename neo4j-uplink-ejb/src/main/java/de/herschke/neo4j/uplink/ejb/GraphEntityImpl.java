@@ -41,6 +41,8 @@ package de.herschke.neo4j.uplink.ejb;
 
 import de.herschke.neo4j.uplink.api.GraphEntity;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
@@ -87,5 +89,11 @@ public abstract class GraphEntityImpl implements Serializable, GraphEntity {
     @Override
     public boolean hasProperty(String name) {
         return ((JSONObject) entity.get("data")).containsKey(name);
+    }
+
+    @Override
+    public Set<String> getPropertyNames() {
+        return Collections.unmodifiableSet(((JSONObject) entity.get("data"))
+                .keySet());
     }
 }

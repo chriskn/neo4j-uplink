@@ -45,7 +45,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * tells the result converter to us the specified column name from the cypher
+ * tells the result converter to use the specified column name from the cypher
  * result to build this property.
  *
  * @author rhk

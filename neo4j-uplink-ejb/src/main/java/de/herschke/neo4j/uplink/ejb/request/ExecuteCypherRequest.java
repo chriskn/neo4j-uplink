@@ -105,7 +105,8 @@ public class ExecuteCypherRequest extends AbstractNeo4jServerCall<CypherResult> 
 
     private CypherResult parseCypherResponse(Reader response) throws Neo4jServerException {
         try {
-            final CypherResponseHandler handler = new CypherResponseHandler();
+            final CypherResponseHandler handler = new CypherResponseHandler(
+                    query, params);
             JSONParser parser = new JSONParser();
             parser.parse(response, handler);
             return handler.getResult();

@@ -39,6 +39,7 @@
  */
 package de.herschke.neo4j.uplink.ejb.response.conversion;
 
+import de.herschke.neo4j.uplink.api.annotations.Discriminator;
 import de.herschke.neo4j.uplink.api.annotations.Result;
 import de.herschke.scripting.annotations.Scripted;
 import java.util.List;
@@ -59,4 +60,6 @@ public interface Actor {
 
     @Result(column = "myname")
     String getNameViaResult();
+
+    String getPropertyValue(@Discriminator String propertyName);
 }

@@ -48,7 +48,23 @@ import java.util.Map;
  *
  * @author rhk
  */
-public interface CypherResult extends Iterable<Map<String, Object>>, Serializable {
+public interface CypherResult extends Iterable<Map<String, Object>>,
+        Serializable {
+
+    /**
+     * returns the cypher query that was executed to fetch this result.
+     *
+     * @return
+     */
+    String getCypher();
+
+    /**
+     * returns the cypher query parameter that were used to execute the cypher
+     * query of this result.
+     *
+     * @return
+     */
+    Map<String, Object> getQueryParameter();
 
     /**
      * @return the count of columns in the result

@@ -40,6 +40,7 @@
 package de.herschke.neo4j.uplink.ejb.response.handling;
 
 import de.herschke.neo4j.uplink.api.CypherResult;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import static org.fest.assertions.Assertions.assertThat;
@@ -173,7 +174,8 @@ public class CypherResponseHandlerTest {
     private CypherResult parseJson(String testJson) throws ParseException {
         System.out.println(">>>>>>>>>>> json: >>>>>>>>>>");
         System.out.println(testJson);
-        final CypherResponseHandler handler = new CypherResponseHandler();
+        final CypherResponseHandler handler = new CypherResponseHandler("",
+                Collections.<String, Object>emptyMap());
         JSONParser parser = new JSONParser();
         parser.parse(testJson, handler);
         CypherResult result = handler.getResult();

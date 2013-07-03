@@ -42,6 +42,7 @@ package de.herschke.neo4j.uplink.ejb.response.conversion;
 import de.herschke.neo4j.uplink.api.CypherResult;
 import de.herschke.neo4j.uplink.api.GraphEntity;
 import de.herschke.neo4j.uplink.ejb.utils.ResultHelper;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,6 +65,16 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
         this.prefix = prefix;
         this.result = result;
         this.rowIndex = rowIndex;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws
+            Throwable {
+        if (method.getDeclaringClass() == CypherResult.class) {
+            // delegate to the result
+            return method.invoke(result, args);
+        }
+        return super.invoke(proxy, method, args);
     }
 
     @Override

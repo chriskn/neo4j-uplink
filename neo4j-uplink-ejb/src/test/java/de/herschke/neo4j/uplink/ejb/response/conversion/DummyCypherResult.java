@@ -42,6 +42,7 @@ package de.herschke.neo4j.uplink.ejb.response.conversion;
 import de.herschke.neo4j.uplink.api.CypherResult;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -138,7 +139,17 @@ public class DummyCypherResult implements CypherResult {
     }
 
     @Override
+    public String getCypher() {
+        return "";
+    }
+
+    @Override
+    public Map<String, Object> getQueryParameter() {
+        return Collections.emptyMap();
+    }
+
+    @Override
     public Iterator<Map<String, Object>> iterator() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return data.iterator();
     }
 }

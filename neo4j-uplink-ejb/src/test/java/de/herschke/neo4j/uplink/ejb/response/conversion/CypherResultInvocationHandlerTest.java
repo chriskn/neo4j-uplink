@@ -308,6 +308,16 @@ public class CypherResultInvocationHandlerTest {
     }
 
     @Test
+    public void testDiscriminatorAnnotationSupport() {
+        Object proxy = invocationHandler
+                .handleGetter(Actor.class, null, "actor");
+        assertThat(proxy).isInstanceOf(Actor.class);
+        assertThat(Proxy.isProxyClass(proxy.getClass())).isTrue();
+        assertThat(((Actor) proxy).getPropertyValue("myname")).isEqualTo(
+                "Max Mustermann");
+    }
+
+    @Test
     public void testScriptingSupport() {
         Object proxy = invocationHandler.handleGetter(Actor.class, null, "actor");
         assertThat(proxy).isInstanceOf(Actor.class);

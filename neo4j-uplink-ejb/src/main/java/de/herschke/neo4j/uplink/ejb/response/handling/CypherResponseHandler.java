@@ -40,6 +40,7 @@
 package de.herschke.neo4j.uplink.ejb.response.handling;
 
 import java.io.IOException;
+import java.util.Map;
 import org.json.simple.parser.ContentHandler;
 import org.json.simple.parser.ParseException;
 
@@ -94,6 +95,14 @@ public class CypherResponseHandler extends DelegatingContentHandler {
     private boolean hasFetchedColumns = false;
     private boolean hasFetchedData = false;
     private boolean fetchingData = false;
+    private final String query;
+    private final Map<String, Object> params;
+
+    public CypherResponseHandler(String query,
+            Map<String, Object> params) {
+        this.query = query;
+        this.params = params;
+    }
 
     public DefaultCypherResult getResult() {
         return this.result;
@@ -101,7 +110,7 @@ public class CypherResponseHandler extends DelegatingContentHandler {
 
     @Override
     public void startJSON() throws ParseException, IOException {
-        this.result = new DefaultCypherResult();
+        this.result = new DefaultCypherResult(query, params);
         this.currentContentHandler = null;
         this.hasFetchedColumns = false;
         this.hasFetchedData = false;

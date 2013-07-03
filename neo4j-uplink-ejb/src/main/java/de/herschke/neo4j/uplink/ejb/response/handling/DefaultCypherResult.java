@@ -57,12 +57,30 @@ import org.json.simple.JSONObject;
  *
  * @author rhk
  */
-class DefaultCypherResult implements CypherResult {
+public class DefaultCypherResult implements CypherResult {
 
     private static final Pattern nodePattern = Pattern.compile("http://.+/db/data/node/(\\d+)");
     private static final Pattern relationshipPattern = Pattern.compile("http://.+/db/data/relationship/(\\d+)");
     private List<String> columns = new ArrayList<>();
     private List<Map<String, Object>> data = new ArrayList<>();
+    private final String query;
+    private final Map<String, Object> params;
+
+    public DefaultCypherResult(String query,
+            Map<String, Object> params) {
+        this.query = query;
+        this.params = params;
+    }
+
+    @Override
+    public String getCypher() {
+        return this.query;
+    }
+
+    @Override
+    public Map<String, Object> getQueryParameter() {
+        return Collections.unmodifiableMap(params);
+    }
 
     @Override
     public int getRowCount() {
