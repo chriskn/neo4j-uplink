@@ -59,13 +59,13 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.Local;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 
 /**
  *
  * @author rhk
  */
-@Singleton
+@Stateless
 @Local(Neo4jUplink.class)
 public class Neo4jRestService implements Neo4jUplink {
 
