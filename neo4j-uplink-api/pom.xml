@@ -4,11 +4,11 @@
     <parent>
         <groupId>de.herschke</groupId>
         <artifactId>neo4j-uplink</artifactId>
-        <version>1.1.13</version>
+        <version>1.1.14-SNAPSHOT</version>
     </parent>
     <groupId>de.herschke</groupId>
     <artifactId>neo4j-uplink-api</artifactId>
-    <version>1.1.13</version>
+    <version>1.1.14-SNAPSHOT</version>
 
     <name>Neo4j ReST Facade API</name>
     <url>https://github.com/rherschke/neo4j-uplink</url>

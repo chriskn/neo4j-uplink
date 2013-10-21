@@ -4,12 +4,12 @@
     <parent>
         <artifactId>neo4j-uplink</artifactId>
         <groupId>de.herschke</groupId>
-        <version>1.1.13</version>
+        <version>1.1.14-SNAPSHOT</version>
     </parent>
 
     <groupId>de.herschke</groupId>
     <artifactId>neo4j-uplink-ejb</artifactId>
-    <version>1.1.13</version>
+    <version>1.1.14-SNAPSHOT</version>
     <packaging>ejb</packaging>
 
     <name>Neo4j ReST Facade EJB Implementation</name>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>de.herschke</groupId>
             <artifactId>neo4j-uplink-api</artifactId>
-            <version>1.1.13</version>
+            <version>1.1.14-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
