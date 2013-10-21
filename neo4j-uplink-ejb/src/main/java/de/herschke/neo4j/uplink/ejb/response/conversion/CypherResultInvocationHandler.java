@@ -61,7 +61,8 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
     private final int rowIndex;
     private GraphEntity entity = null; // stores the `this` graph entity for fast reuse.
 
-    public CypherResultInvocationHandler(String prefix, CypherResult result, int rowIndex) {
+    public CypherResultInvocationHandler(String prefix, CypherResult result,
+            int rowIndex) {
         this.prefix = prefix;
         this.result = result;
         this.rowIndex = rowIndex;
@@ -87,7 +88,9 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
                 Object value = result.getValue(rowIndex, "this");
                 // `this` value must be a GraphEntity!
                 if (!(value instanceof GraphEntity)) {
-                    throw new IllegalStateException(String.format("when using `this` in the cypher return value, then the result must be either a node or a relationship, but: %s is not!", value));
+                    throw new IllegalStateException(String.format(
+                            "when using `this` in the cypher return value, then the result must be either a node or a relationship, but: %s is not!",
+                            value));
                 }
                 // remember the entity
                 this.entity = (GraphEntity) value;
@@ -105,9 +108,11 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
         return value;
     }
 
-    private <R> R createProxyForValue(Class<R> returnType, String property, Object value) throws IllegalArgumentException {
+    private <R> R createProxyForValue(Class<R> returnType, String property,
+            Object value) throws IllegalArgumentException {
         if (value != null && value instanceof GraphEntity) {
-            return GraphEntityInvocationHandler.createGraphEntityProxy(returnType, (GraphEntity) value, this);
+            return GraphEntityInvocationHandler.createGraphEntityProxy(
+                    returnType, (GraphEntity) value, this);
         } else if (value != null && value instanceof Iterable) {
             for (Object element : (Iterable) value) {
                 return createProxyForValue(returnType, property, element);
@@ -117,21 +122,26 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
             Map<String, Object> subData = new HashMap<>();
             for (String column : this.result.getColumnNames()) {
                 if (column.startsWith(property + ".")) {
-                    subData.put(column.substring(property.length() + 1), result.getValue(rowIndex, column));
+                    subData.put(column.substring(property.length() + 1), result
+                            .getValue(rowIndex, column));
                 }
             }
-            return (R) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{returnType}, new MapInvocationHandler(subData, this));
+            return (R) Proxy.newProxyInstance(getClass().getClassLoader(),
+                    new Class[]{returnType}, new MapInvocationHandler(subData,
+                    this));
         }
     }
 
     @Override
-    protected <R> R createProxyObject(Class<R> returnType, String property) throws IllegalArgumentException {
+    protected <R> R createProxyObject(Class<R> returnType, String property)
+            throws IllegalArgumentException {
         Object value = getPropertyValue(property);
         return createProxyForValue(returnType, property, value);
     }
 
     @Override
-    protected <E> List<E> createProxyList(Class<E> componentType, String property) {
+    protected <E> List<E> createProxyList(Class<E> componentType,
+            String property) {
         if (this.result.getColumnNames().contains(property)) {
             Object value = getPropertyValue(property);
 
@@ -142,14 +152,17 @@ public class CypherResultInvocationHandler<P> extends AbstractInvocationHandler<
             if (Iterable.class.isAssignableFrom(value.getClass())) {
                 final List<E> list = new ArrayList<>();
                 for (Object element : ((Iterable) value)) {
-                    list.add(createProxyForValue(componentType, property, element));
+                    list.add(createProxyForValue(componentType, property,
+                            element));
                 }
                 return list;
             } else {
-                return Collections.singletonList(createProxyObject(componentType, property));
+                return Collections.singletonList(
+                        createProxyObject(componentType, property));
             }
         } else {
-            return new ProxyList(componentType, ResultHelper.invert(this.result.getRowData(rowIndex), property + "."));
+            return new ProxyList(componentType, ResultHelper.invert(this.result
+                    .getRowData(rowIndex), property + "."));
         }
     }
 

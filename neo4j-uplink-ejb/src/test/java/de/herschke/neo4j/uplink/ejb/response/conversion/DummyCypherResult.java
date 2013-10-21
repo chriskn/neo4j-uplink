@@ -100,7 +100,11 @@ public class DummyCypherResult implements CypherResult {
 
     @Override
     public List<Object> getColumnValues(String columnName) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        List<Object> result = new ArrayList<>();
+        for (Map<String, Object> row : data) {
+            result.add(row.get(columnName));
+        }
+        return result;
     }
 
     @Override

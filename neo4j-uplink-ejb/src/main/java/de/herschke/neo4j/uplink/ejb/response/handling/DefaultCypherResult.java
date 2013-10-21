@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Pattern;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 /**
@@ -59,8 +60,10 @@ import org.json.simple.JSONObject;
  */
 public class DefaultCypherResult implements CypherResult {
 
-    private static final Pattern nodePattern = Pattern.compile("http://.+/db/data/node/(\\d+)");
-    private static final Pattern relationshipPattern = Pattern.compile("http://.+/db/data/relationship/(\\d+)");
+    private static final Pattern nodePattern = Pattern.compile(
+            "http://.+/db/data/node/(\\d+)");
+    private static final Pattern relationshipPattern = Pattern.compile(
+            "http://.+/db/data/relationship/(\\d+)");
     private List<String> columns = new ArrayList<>();
     private List<Map<String, Object>> data = new ArrayList<>();
     private final String query;
@@ -133,7 +136,8 @@ public class DefaultCypherResult implements CypherResult {
 
     @Override
     public List<Object> getRowValues(int rowIndex) {
-        return Collections.unmodifiableList(new ArrayList(this.data.get(rowIndex).values()));
+        return Collections.unmodifiableList(new ArrayList(this.data
+                .get(rowIndex).values()));
     }
 
     @Override
@@ -167,7 +171,8 @@ public class DefaultCypherResult implements CypherResult {
         // get the row for the rowIndex
         Map<String, Object> row = this.data.get(rowIndex);
         // set the field...
-        if (value instanceof JSONObject && ((JSONObject) value).containsKey("self")) {
+        if (value instanceof JSONObject && ((JSONObject) value).containsKey(
+                "self")) {
             String selfUrl = (String) ((JSONObject) value).get("self");
             // check if it is a node or a relationship
             if (nodePattern.matcher(selfUrl).matches()) {
@@ -175,6 +180,27 @@ public class DefaultCypherResult implements CypherResult {
             } else if (relationshipPattern.matcher(selfUrl).matches()) {
                 value = new RelationshipImpl((JSONObject) value);
             }
+        }
+        // if it is a list...
+        if (value instanceof JSONArray) {
+            List<Object> innerObjects = new ArrayList<>();
+            for (Object innerValue : ((JSONArray) value)) {
+                if (innerValue instanceof JSONObject
+                        && ((JSONObject) innerValue)
+                        .containsKey("self")) {
+                    String selfUrl = (String) ((JSONObject) innerValue).get(
+                            "self");
+                    // check if it is a node or a relationship
+                    if (nodePattern.matcher(selfUrl).matches()) {
+                        innerValue = new NodeImpl((JSONObject) innerValue);
+                    } else if (relationshipPattern.matcher(selfUrl).matches()) {
+                        innerValue = new RelationshipImpl(
+                                (JSONObject) innerValue);
+                    }
+                }
+                innerObjects.add(innerValue);
+            }
+            value = innerObjects;
         }
         row.put(columnName, value);
     }
@@ -206,7 +232,8 @@ public class DefaultCypherResult implements CypherResult {
         for (int c = 0; c < getColumnCount(); c++) {
             columnSizes[c] = (columns.get(c).length());
             for (Object rowValue : getColumnValues(c)) {
-                columnSizes[c] = Math.max(columnSizes[c], rowValue == null ? 0 : rowValue.toString().length());
+                columnSizes[c] = Math.max(columnSizes[c],
+                        rowValue == null ? 0 : rowValue.toString().length());
             }
         }
         StringBuilder sb = new StringBuilder();
@@ -217,7 +244,9 @@ public class DefaultCypherResult implements CypherResult {
             } else {
                 sb.append("-");
             }
-            sb.append(new String(new char[columnSizes[i]]).replaceAll("\0", "-"));
+            sb
+                    .append(new String(new char[columnSizes[i]])
+                    .replaceAll("\0", "-"));
             sb.append("-+");
         }
         sb.append("\n");
@@ -242,7 +271,9 @@ public class DefaultCypherResult implements CypherResult {
             } else {
                 sb.append("-");
             }
-            sb.append(new String(new char[columnSizes[i]]).replaceAll("\0", "-"));
+            sb
+                    .append(new String(new char[columnSizes[i]])
+                    .replaceAll("\0", "-"));
             sb.append("-+");
         }
         sb.append("\n");
@@ -277,7 +308,8 @@ public class DefaultCypherResult implements CypherResult {
                 } else {
                     sb.append("-");
                 }
-                sb.append(new String(new char[columnSizes[i]]).replaceAll("\0", "-"));
+                sb.append(new String(new char[columnSizes[i]]).replaceAll("\0",
+                        "-"));
                 sb.append("-+");
             }
             sb.append("\n");
