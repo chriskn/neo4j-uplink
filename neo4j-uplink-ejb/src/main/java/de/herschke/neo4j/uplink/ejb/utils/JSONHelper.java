@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.joda.time.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
@@ -81,6 +82,8 @@ public final class JSONHelper {
             object.put(prefix, ((Class) value).getSimpleName());
         } else if (value instanceof Date) {
             object.put(prefix, Long.valueOf(((Date) value).getTime()));
+        } else if (value instanceof DateTime) {
+            object.put(prefix, Long.valueOf(((DateTime) value).getMillis()));
         } else if (value != null && value.getClass().isEnum()) {
             object.put(prefix, ((Enum) value).name());
         } else if (value != null && value.getClass().isArray()) {

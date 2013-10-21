@@ -18,6 +18,7 @@
     <properties>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netbeans.hint.license>herschke-uplink</netbeans.hint.license>
     </properties>
 
     <dependencies>
@@ -61,6 +62,12 @@
             <groupId>de.herschke</groupId>
             <artifactId>scripting-annotations</artifactId>
             <version>[1.0.2-SNAPSHOT,)</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.2</version>
             <type>jar</type>
         </dependency>
         <dependency>

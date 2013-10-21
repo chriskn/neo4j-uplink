@@ -11,6 +11,10 @@
     
 	<inceptionYear>2013</inceptionYear>
 
+    <properties>
+        <netbeans.hint.license>herschke-uplink</netbeans.hint.license>
+    </properties>
+
 	<licenses>
 		<license>
 			<name>The BSD License</name>
